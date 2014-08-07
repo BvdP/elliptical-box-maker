@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-#import sys
-#sys.path.append('C:\\Program Files (x86)\\Inkscape\\share\\extensions')
-
 # We will use the inkex module with the predefined Effect base class.
 import inkex
 # The simplestyle module provides functions for style parsing.
@@ -82,7 +79,7 @@ def draw_SVG_line( (x1, y1), (x2, y2),  name, parent):
     line = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), line_attribs )
 
 class Ellipse():
-    nrPoints = 1000 #used for piecewise linear circumference calculation
+    nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
 
     def __init__(self, w, h):
         self.h = h
@@ -91,14 +88,13 @@ class Ellipse():
         self.ellData = [(0, w/2, 0, 0)] # (angle, x, y, cumulative distance from angle = 0)
         angle = 0
         self.angleStep = 2 * pi / self.nrPoints
-        #note the render angle (ra) corresponds to the angle from the ellipse center (ca) according to
+        #note: the render angle (ra) corresponds to the angle from the ellipse center (ca) according to:
         # ca = atan(w/h * tan(ra))
         for i in range(self.nrPoints):
             angle += self.angleStep
             prev = self.ellData[-1]
             x, y = w/2 * cos(angle), h/2 * sin(angle)
             self.ellData.append((angle, x, y, prev[3] + sqrt((prev[1] - x)**2 + (prev[2] - y)**2)))
-        #inkex.debug(self.ellData)
         self.circumference = self.ellData[-1][3]
 
     def rAngle(self, a):
@@ -127,11 +123,6 @@ class EllipticalBox(inkex.Effect):
     Creates a new layer with the drawings for a parametrically generaded box.
     """
     def __init__(self):
-        """
-        Constructor.
-
-        """
-        # Call the base class constructor.
         inkex.Effect.__init__(self)
 
         self.OptionParser.add_option('-t', '--thickness', action = 'store',
@@ -156,7 +147,7 @@ class EllipticalBox(inkex.Effect):
 
         self.OptionParser.add_option('-a', '--lid_angle', action = 'store',
           type = 'float', dest = 'lid_angle', default = '120',
-          help = 'Angle that forms the lid (measured from centerpoint of the ellipse)')
+          help = 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)')
 
         self.OptionParser.add_option('-b', '--body_ribcount', action = 'store',
           type = 'int', dest = 'body_ribcount', default = '0',
@@ -189,12 +180,10 @@ class EllipticalBox(inkex.Effect):
         W = inkex.unittouu( str(W)  + unit )
         L = inkex.unittouu( str(L)  + unit )
 
-        # Get access to main SVG document element and get its dimensions.
         svg = self.document.getroot()
         docWidth  = inkex.unittouu(svg.get('width'))
         docHeigth = inkex.unittouu(svg.attrib['height'])
 
-        # Create a new layer.
         layer = inkex.etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Elliptical Box')
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
@@ -203,8 +192,16 @@ class EllipticalBox(inkex.Effect):
         draw_SVG_ellipse((L / 2, H / 2), elCenter, layer)
         draw_SVG_ellipse((L / 2 + thickness, H / 2 + thickness), elCenter, layer)
         el = Ellipse(L, H)
-        inkex.debug(inkex.uutounit(el.circumference, 'cm'))
-        inkex.debug(inkex.uutounit(el.distFromAngles(5 * pi/6, pi/6), 'cm'))
+
+        lidAngleRad = self.options.lid_angle * 2 * pi / 360
+        lidStartAngle = pi / 2 - lidAngleRad / 2
+        lidEndAngle = pi / 2 + lidAngleRad / 2
+        lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
+        bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
+
+
+        inkex.debug('lid %d body %d'%(lidLength, bodyLength))
+        #inkex.debug(inkex.uutounit(el.distFromAngles(5 * pi/6, pi/6), 'cm'))
         #Create text element
         # text = inkex.etree.Element(inkex.addNS('text','svg'))
         # text.text = 'Hello %s!' % (what)
