@@ -72,7 +72,7 @@ def SVG_curve(parent, segments, style, closed=True):
 
 #draw an SVG line segment between the given (raw) points
 def draw_SVG_line( (x1, y1), (x2, y2),  name, parent):
-    line_attribs = {'style' : simplestyle.formatStyle(objStyle),
+    line_attribs = {'style' : objStyle,
                     inkex.addNS('label','inkscape') : name,
                     'd' : 'M '+str(x1)+','+str(y1)+' L '+str(x2)+','+str(y2)}
 
@@ -145,8 +145,8 @@ class EllipticalBox(inkex.Effect):
           type = 'float', dest = 'cut_dist', default = '1.5',
           help = 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.')
 
-        self.OptionParser.add_option('-d', '--cut_length', action = 'store',
-          type = 'float', dest = 'cut_length', default = '1.5',
+        self.OptionParser.add_option('-c', '--cut_length', action = 'store',
+          type = 'float', dest = 'cut_length', default = '30.0',
           help = 'Length of cuts on the wrap around.')
 
         self.OptionParser.add_option('-a', '--lid_angle', action = 'store',
@@ -183,6 +183,8 @@ class EllipticalBox(inkex.Effect):
         H = inkex.unittouu( str(H)  + unit )
         W = inkex.unittouu( str(W)  + unit )
         D = inkex.unittouu( str(D)  + unit )
+        cutDist = inkex.unittouu( str(self.options.cut_dist)  + unit )
+        cutLength = inkex.unittouu( str(self.options.cut_length)  + unit )
 
         svg = self.document.getroot()
         docWidth  = inkex.unittouu(svg.get('width'))
@@ -203,17 +205,20 @@ class EllipticalBox(inkex.Effect):
         lidStartAngle = pi / 2 - lidAngleRad / 2
         lidEndAngle = pi / 2 + lidAngleRad / 2
         lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
-        lidCutCount = floor(lidLength / self.options.cut_distance)
+        lidCutCount = floor(lidLength / cutDist)
         if lidCutCount % 2 == 0:
             lidCutCount += 1    # make sure we have an odd number of cuts
         lidCutDist = lidLength / lidCutCount
-
-        bodyCutCount = floor(bodyLength / self.options.cut_distance)
+        bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
+        bodyCutCount = int(floor(bodyLength / cutDist))
         if bodyCutCount % 2 == 0:
             bodyCutCount += 1   # same as for the lid: odd number
         bodyCutDist = bodyLength / bodyCutCount
 
         bodyOrigin = (0, 0)
+        for i in range(bodyCutCount):
+            x = (bodyOrigin[0] + i * bodyCutDist)
+            draw_SVG_line((x, bodyOrigin[1]),(x, bodyOrigin[1] + cutLength/2),'',layer)
         draw_SVG_square((bodyLength, D), bodyOrigin, layer)
         lidOrigin = (0, D)
         draw_SVG_square((lidLength, D), lidOrigin, layer)
