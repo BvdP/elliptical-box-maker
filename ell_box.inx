@@ -4,9 +4,9 @@
 	<dependency type="executable" location="extensions">inkex.py</dependency>
 	<dependency type="executable" location="extensions">ell_box.py</dependency>
 	<param name="thickness" type="float" min="1.0" max="100.0" _gui-text="Material thickness">3.0</param>
-	<param name="width" type="float" min="0.0" max="10000.0" _gui-text="Width">10.0</param>
-	<param name="length" type="float" min="0.0" max="10000.0" _gui-text="Length">10.0</param>
 	<param name="heigth" type="float" min="0.0" max="10000.0" _gui-text="Heigth">10.0</param>
+	<param name="width" type="float" min="0.0" max="10000.0" _gui-text="Width">10.0</param>
+	<param name="depth" type="float" min="0.0" max="10000.0" _gui-text="Depth">10.0</param>
 	<param name="cut_dist" type="float" min="0.1" max="100.0" _gui-text="Cut distance">1.5</param>
 	<param name="lid_angle" type="float" min="0.0" max="360.0" _gui-text="Lid angle">120</param>
 	<effect>

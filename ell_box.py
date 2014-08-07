@@ -137,9 +137,9 @@ class EllipticalBox(inkex.Effect):
           type = 'float', dest = 'heigth', default = '10.0',
           help = 'Box heigth')
 
-        self.OptionParser.add_option('-y', '--length', action = 'store',
-          type = 'float', dest = 'length', default = '3.0',
-          help = 'Box length')
+        self.OptionParser.add_option('-y', '--depth', action = 'store',
+          type = 'float', dest = 'depth', default = '3.0',
+          help = 'Box depth')
 
         self.OptionParser.add_option('-d', '--cut_dist', action = 'store',
           type = 'float', dest = 'cut_dist', default = '1.5',
@@ -163,12 +163,12 @@ class EllipticalBox(inkex.Effect):
         """
         W = self.options.width
         H = self.options.heigth
-        L = self.options.length
+        D = self.options.depth
         thickness = self.options.thickness
 
         # input sanity check
         error = False
-        if min(H, W, L)==0:
+        if min(H, W, D)==0:
             inkex.errormsg(_('Error: Dimensions must be non zero'))
             error = True
 
@@ -178,7 +178,7 @@ class EllipticalBox(inkex.Effect):
         unit = 'mm'
         H = inkex.unittouu( str(H)  + unit )
         W = inkex.unittouu( str(W)  + unit )
-        L = inkex.unittouu( str(L)  + unit )
+        D = inkex.unittouu( str(D)  + unit )
 
         svg = self.document.getroot()
         docWidth  = inkex.unittouu(svg.get('width'))
@@ -189,9 +189,9 @@ class EllipticalBox(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         elCenter = (docWidth / 2, docHeigth / 2)
-        draw_SVG_ellipse((L / 2, H / 2), elCenter, layer)
-        draw_SVG_ellipse((L / 2 + thickness, H / 2 + thickness), elCenter, layer)
-        el = Ellipse(L, H)
+        draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
+        draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer)
+        el = Ellipse(W, H)
 
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
         lidStartAngle = pi / 2 - lidAngleRad / 2
