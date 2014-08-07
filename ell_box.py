@@ -10,7 +10,7 @@ import inkex
 import simplestyle
 from math import *
 
-objStyle = simplestyle.formatStyle( 
+objStyle = simplestyle.formatStyle(
     {'stroke'  : '#000000',
     'stroke-width'  : '0.1',
     'fill'          : 'none'
@@ -25,7 +25,7 @@ def draw_SVG_square((w,h), (x,y), parent):
         'y'         : str(y)
     }
     circ = inkex.etree.SubElement(parent, inkex.addNS('rect','svg'), attribs )
-    
+
 def draw_SVG_ellipse((rx, ry), (cx, cy), parent, start_end=(0, 2*pi), transform='' ):
     ell_attribs = {'style':objStyle,
         inkex.addNS('cx','sodipodi')        :str(cx),
@@ -57,13 +57,13 @@ def draw_SVG_arc((rx, ry), x_axis_rot):
     inkex.etree.SubElement(parent, inkex.addNS('path','svg'), drw )
     inkex.addNS('','svg')
 
-        
+
 def SVG_arc_to():
     pass
 
 def SVG_line_segment():
     pass
-    
+
 def SVG_curve(parent, segments, style, closed=True):
     pathStr = 'M '+ segments[0]
     if closed:
@@ -83,7 +83,7 @@ def draw_SVG_line( (x1, y1), (x2, y2),  name, parent):
 
 class Ellipse():
     nrPoints = 1000 #used for piecewise linear circumference calculation
-    
+
     def __init__(self, w, h):
         self.h = h
         self.w = w
@@ -100,7 +100,7 @@ class Ellipse():
             self.ellData.append((angle, x, y, prev[3] + sqrt((prev[1] - x)**2 + (prev[2] - y)**2)))
         #inkex.debug(self.ellData)
         self.circumference = self.ellData[-1][3]
-        
+
     def rAngle(self, a):
         """Convert an angle measured from ellipse center to the angle used to generate ellData (used for lookups)"""
         cf = 0
@@ -108,9 +108,9 @@ class Ellipse():
             cf = pi
         if a > 3 * pi / 2:
             cf = 2 * pi
-            
+
         return atan(self.w / self.h * tan(a)) + cf
-    
+
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
         i1 = int(self.rAngle(a1) / self.angleStep)
@@ -121,7 +121,7 @@ class Ellipse():
             len = self.circumference + self.ellData[i2][3] - self.ellData[i1][3]
         inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
-    
+
 class EllipticalBox(inkex.Effect):
     """
     Creates a new layer with the drawings for a parametrically generaded box.
@@ -157,11 +157,11 @@ class EllipticalBox(inkex.Effect):
         self.OptionParser.add_option('-a', '--lid_angle', action = 'store',
           type = 'float', dest = 'lid_angle', default = '120',
           help = 'Angle that forms the lid (measured from centerpoint of the ellipse)')
-          
+
         self.OptionParser.add_option('-b', '--body_ribcount', action = 'store',
           type = 'int', dest = 'body_ribcount', default = '0',
           help = 'Number of ribs in the body')
-          
+
         self.OptionParser.add_option('-l', '--lid_ribcount', action = 'store',
           type = 'int', dest = 'lid_ribcount', default = '0',
           help = 'Number of ribs in the lid')
@@ -174,15 +174,15 @@ class EllipticalBox(inkex.Effect):
         H = self.options.heigth
         L = self.options.length
         thickness = self.options.thickness
-        
+
         # input sanity check
         error = False
         if min(H, W, L)==0:
             inkex.errormsg(_('Error: Dimensions must be non zero'))
             error = True
-            
+
         if error: exit()
-        
+
         # convert units
         unit = 'mm'
         H = inkex.unittouu( str(H)  + unit )
