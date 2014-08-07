@@ -145,6 +145,10 @@ class EllipticalBox(inkex.Effect):
           type = 'float', dest = 'cut_dist', default = '1.5',
           help = 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.')
 
+        self.OptionParser.add_option('-d', '--cut_length', action = 'store',
+          type = 'float', dest = 'cut_length', default = '1.5',
+          help = 'Length of cuts on the wrap around.')
+
         self.OptionParser.add_option('-a', '--lid_angle', action = 'store',
           type = 'float', dest = 'lid_angle', default = '120',
           help = 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)')
@@ -188,17 +192,31 @@ class EllipticalBox(inkex.Effect):
         layer.set(inkex.addNS('label', 'inkscape'), 'Elliptical Box')
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
+        # elliptical sides
         elCenter = (docWidth / 2, docHeigth / 2)
         draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
         draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer)
         el = Ellipse(W, H)
 
+        #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
         lidStartAngle = pi / 2 - lidAngleRad / 2
         lidEndAngle = pi / 2 + lidAngleRad / 2
         lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
-        bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
+        lidCutCount = floor(lidLength / self.options.cut_distance)
+        if lidCutCount % 2 == 0:
+            lidCutCount += 1    # make sure we have an odd number of cuts
+        lidCutDist = lidLength / lidCutCount
 
+        bodyCutCount = floor(bodyLength / self.options.cut_distance)
+        if bodyCutCount % 2 == 0:
+            bodyCutCount += 1   # same as for the lid: odd number
+        bodyCutDist = bodyLength / bodyCutCount
+
+        bodyOrigin = (0, 0)
+        draw_SVG_square((bodyLength, D), bodyOrigin, layer)
+        lidOrigin = (0, D)
+        draw_SVG_square((lidLength, D), lidOrigin, layer)
 
         inkex.debug('lid %d body %d'%(lidLength, bodyLength))
         #inkex.debug(inkex.uutounit(el.distFromAngles(5 * pi/6, pi/6), 'cm'))
