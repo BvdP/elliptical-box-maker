@@ -7,10 +7,11 @@ This is a work in progress and not very useful at the moment.
 
 Installation
 ------------
+You need to copy ell_box.py and ell_box.inx to your Inkscape extensions directory.
 
 On Windows:
-* Local install: copy both files to C:\Users\USERNAME\AppData\Roaming\inkscape\extensions
-* System wide install copy the files to C:\Program Files\Inkscape\share\extensions
+* Local install: put both files in C:\Users\USERNAME\AppData\Roaming\inkscape\extensions
+* System wide install: put the files in C:\Program Files\Inkscape\share\extensions
 
 On Linux:
 * Local install: put both files in ~/.config/inkscape/extensions
