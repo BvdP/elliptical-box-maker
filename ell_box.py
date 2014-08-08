@@ -63,53 +63,70 @@ def draw_SVG_text((cx, cy), txt, parent):
     text.set('style', formatStyle(style))
     parent.append(text)
 
-def SVG_arc_to():
-    pass
+def SVG_move_to(x, y):
+    return "M %d %d" % (x, y)
 
-def SVG_line_segment():
-    pass
+def SVG_line_to(x, y):
+    return "L %d %d" % (x, y)
+
+def SVG_arc_to(rx, ry, x, y):
+    la = sw = 0
+    return "A %d %d 0 %d %d" % (rx, ry, la, sw, x, y)
+
+def SVG_path(components):
+    return '<path d="' + ' '.join(components) + '">'
 
 def SVG_curve(parent, segments, style, closed=True):
-    pathStr = 'M '+ segments[0]
+    #pathStr = 'M '+ segments[0]
+    pathStr = ' '.join(segments)
     if closed:
         pathStr += ' z'
     attributes = {
-      'style': simplestyle.formatStyle(style),
+      'style': style,
       'd'    : pathStr}
     path = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), attributes )
 
 #draw an SVG line segment between the given (raw) points
-def draw_SVG_line( (x1, y1), (x2, y2),  name, parent):
+def draw_SVG_line( (x1, y1), (x2, y2), parent):
     line_attribs = {'style' : objStyle,
-                    inkex.addNS('label','inkscape') : name,
                     'd' : 'M '+str(x1)+','+str(y1)+' L '+str(x2)+','+str(y2)}
 
     line = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), line_attribs )
 
 
-def _makeCurvedSurface((x, y), (w, h), cutDist, hCutCount, parent):
+def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
     wCutCount = int(floor(w / cutDist))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
     wCutDist = w / wCutCount
-
     cutLength = h / hCutCount - cutDist
-    origin = (x, y)
-    for i in range(wCutCount):
-        x = (origin[0] + i * wCutDist)
-        draw_SVG_line((x, origin[1]),(x, origin[1] + cutLength / 2),'',parent)
-        draw_SVG_line((x, origin[1] + h),(x, origin[1] + h - cutLength/2),'',parent)
-        for j in range(hCutCount -1):
-            y = origin[1] + cutLength / 2 + cutDist + j * (cutLength + cutDist)
-            draw_SVG_line((x, y),(x, y + cutLength),'',parent)
 
     for i in range(wCutCount):
-        x = (origin[0] + i * wCutDist + wCutDist / 2)
+        if i%2 == 1: # should we make a notch here?
+            inset = thickness
+        else:
+            inset = 0
+
+        x1 = (X + i * wCutDist)
+        draw_SVG_line((x1, Y + inset),(x1 + wCutDist, Y + inset), parent)
+        draw_SVG_line((x1, Y + h - inset),(x1 + wCutDist, Y + h - inset), parent)
+
+        if i > 0:
+            draw_SVG_line((x1, Y),(x1, Y + cutLength / 2), parent)
+            draw_SVG_line((x1, Y + h),(x1, Y + h - cutLength/2), parent)
+
+            for j in range(hCutCount -1):
+                y = Y + cutLength / 2 + cutDist + j * (cutLength + cutDist)
+                draw_SVG_line((x1, y),(x1, y + cutLength), parent)
+
+        x2 = (X + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
-            y = origin[1] + cutDist / 2 + j * (cutLength + cutDist)
-            draw_SVG_line((x, y),(x, y + cutLength),'',parent)
+            y = Y + cutDist / 2 + j * (cutLength + cutDist)
+            draw_SVG_line((x2, y),(x2, y + cutLength), parent)
 
-    draw_SVG_square((w, h), origin, parent)
+    #draw_SVG_square((w, h), origin, parent)
+    draw_SVG_line((X, Y),(X, Y + h), parent)
+    draw_SVG_line((X + w, Y),(X + w, Y + h), parent)
 
 class Ellipse():
     nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
@@ -202,10 +219,14 @@ class EllipticalBox(inkex.Effect):
         """
         Draws as basic elliptical box, based on provided parameters
         """
-        W = self.options.width
-        H = self.options.heigth
-        D = self.options.depth
-        thickness = self.options.thickness
+
+        # convert units
+        unit = 'mm'
+        H = inkex.unittouu( str(self.options.heigth)  + unit )
+        W = inkex.unittouu( str(self.options.width)  + unit )
+        D = inkex.unittouu( str(self.options.depth)  + unit )
+        thickness = inkex.unittouu(str(self.options.thickness) + unit)
+        cutDist = inkex.unittouu( str(self.options.cut_dist)  + unit )
         cutNr = self.options.cut_nr
 
         # input sanity check
@@ -219,12 +240,6 @@ class EllipticalBox(inkex.Effect):
             error = True
         if error: exit()
 
-        # convert units
-        unit = 'mm'
-        H = inkex.unittouu( str(H)  + unit )
-        W = inkex.unittouu( str(W)  + unit )
-        D = inkex.unittouu( str(D)  + unit )
-        cutDist = inkex.unittouu( str(self.options.cut_dist)  + unit )
 
         svg = self.document.getroot()
         docWidth  = inkex.unittouu(svg.get('width'))
@@ -248,8 +263,8 @@ class EllipticalBox(inkex.Effect):
         lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
         bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
 
-        _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, layer)
-        _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, layer)
+        _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
+        _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
 
 
 
