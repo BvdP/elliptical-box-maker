@@ -122,7 +122,14 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
         x2 = (X + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
             y = Y + cutDist / 2 + j * (cutLength + cutDist)
-            draw_SVG_line((x2, y),(x2, y + cutLength), parent)
+            cl = cutLength
+            if j == 0:  # first row
+                y += inset
+                cl -= inset
+            elif j == hCutCount -1: # last row
+                cl -= inset
+
+            draw_SVG_line((x2, y),(x2, y + cl), parent)
 
     #draw_SVG_square((w, h), origin, parent)
     draw_SVG_line((X, Y),(X, Y + h), parent)
@@ -134,7 +141,6 @@ class Ellipse():
     def __init__(self, w, h):
         self.h = h
         self.w = w
-        #inkex.debug('dimensions ' + str(w) + ' ' + str(h))
         self.ellData = [(0, w/2, 0, 0)] # (angle, x, y, cumulative distance from angle = 0)
         angle = 0
         self.angleStep = 2 * pi / self.nrPoints
