@@ -86,6 +86,31 @@ def draw_SVG_line( (x1, y1), (x2, y2),  name, parent):
 
     line = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), line_attribs )
 
+
+def _makeCurvedSurface((x, y), (w, h), cutDist, hCutCount, parent):
+    wCutCount = int(floor(w / cutDist))
+    if wCutCount % 2 == 0:
+        wCutCount += 1    # make sure we have an odd number of cuts
+    wCutDist = w / wCutCount
+
+    cutLength = h / hCutCount - cutDist
+    origin = (x, y)
+    for i in range(wCutCount):
+        x = (origin[0] + i * wCutDist)
+        draw_SVG_line((x, origin[1]),(x, origin[1] + cutLength / 2),'',parent)
+        draw_SVG_line((x, origin[1] + h),(x, origin[1] + h - cutLength/2),'',parent)
+        for j in range(hCutCount -1):
+            y = origin[1] + cutLength / 2 + cutDist + j * (cutLength + cutDist)
+            draw_SVG_line((x, y),(x, y + cutLength),'',parent)
+
+    for i in range(wCutCount):
+        x = (origin[0] + i * wCutDist + wCutDist / 2)
+        for j in range(hCutCount):
+            y = origin[1] + cutDist / 2 + j * (cutLength + cutDist)
+            draw_SVG_line((x, y),(x, y + cutLength),'',parent)
+
+    draw_SVG_square((w, h), origin, parent)
+
 class Ellipse():
     nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
 
@@ -125,6 +150,9 @@ class Ellipse():
             len = self.circumference + self.ellData[i2][3] - self.ellData[i1][3]
         #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
+
+
+
 
 class EllipticalBox(inkex.Effect):
     """
@@ -168,6 +196,7 @@ class EllipticalBox(inkex.Effect):
         self.OptionParser.add_option('-l', '--lid_ribcount', action = 'store',
           type = 'int', dest = 'lid_ribcount', default = '0',
           help = 'Number of ribs in the lid')
+
 
     def effect(self):
         """
@@ -215,39 +244,13 @@ class EllipticalBox(inkex.Effect):
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
         lidStartAngle = pi / 2 - lidAngleRad / 2
         lidEndAngle = pi / 2 + lidAngleRad / 2
+
         lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
-        lidCutCount = floor(lidLength / cutDist)
-        if lidCutCount % 2 == 0:
-            lidCutCount += 1    # make sure we have an odd number of cuts
-        lidCutDist = lidLength / lidCutCount
         bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
-        bodyCutCount = int(floor(bodyLength / cutDist))
-        if bodyCutCount % 2 == 0:
-            bodyCutCount += 1   # same as for the lid: odd number
-        bodyCutDist = bodyLength / bodyCutCount
 
-        cutLength = D / cutNr - cutDist
-        bodyOrigin = (0, 0)
-        for i in range(bodyCutCount):
-            x = (bodyOrigin[0] + i * bodyCutDist)
-            draw_SVG_line((x, bodyOrigin[1]),(x, bodyOrigin[1] + cutLength/2),'',layer)
-            draw_SVG_line((x, bodyOrigin[1] + D),(x, bodyOrigin[1] + D - cutLength/2),'',layer)
-            for j in range(cutNr -1):
-                y = bodyOrigin[1] + cutLength / 2 + cutDist + j * (cutLength + cutDist)
-                draw_SVG_line((x, y),(x, y + cutLength),'',layer)
+        _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, layer)
+        _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, layer)
 
-        for i in range(bodyCutCount):
-            x = (bodyOrigin[0] + i * bodyCutDist + bodyCutDist / 2)
-            for j in range(cutNr):
-                y = bodyOrigin[1] + cutDist / 2 + j * (cutLength + cutDist)
-                draw_SVG_line((x, y),(x, y + cutLength),'',layer)
-
-        draw_SVG_square((bodyLength, D), bodyOrigin, layer)
-        lidOrigin = (0, D)
-        draw_SVG_square((lidLength, D), lidOrigin, layer)
-
-        #inkex.debug('lid %d body %d'%(lidLength, bodyLength))
-        #inkex.debug(inkex.uutounit(el.distFromAngles(5 * pi/6, pi/6), 'cm'))
 
 
 # Create effect instance and apply it.
