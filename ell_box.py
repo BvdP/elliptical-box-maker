@@ -145,9 +145,9 @@ class EllipticalBox(inkex.Effect):
           type = 'float', dest = 'cut_dist', default = '1.5',
           help = 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.')
 
-        self.OptionParser.add_option('-c', '--cut_length', action = 'store',
-          type = 'float', dest = 'cut_length', default = '30.0',
-          help = 'Length of cuts on the wrap around.')
+        self.OptionParser.add_option('-c', '--cut_nr', action = 'store',
+          type = 'int', dest = 'cut_nr', default = '3',
+          help = 'Number of cuts across the depth of the box.')
 
         self.OptionParser.add_option('-a', '--lid_angle', action = 'store',
           type = 'float', dest = 'lid_angle', default = '120',
@@ -169,6 +169,7 @@ class EllipticalBox(inkex.Effect):
         H = self.options.heigth
         D = self.options.depth
         thickness = self.options.thickness
+        cutNr = self.options.cut_nr
 
         # input sanity check
         error = False
@@ -176,6 +177,9 @@ class EllipticalBox(inkex.Effect):
             inkex.errormsg(_('Error: Dimensions must be non zero'))
             error = True
 
+        if cutNr < 1:
+            inkex.errormsg(_('Error: Number of cuts should be at least 1'))
+            error = True
         if error: exit()
 
         # convert units
@@ -184,7 +188,6 @@ class EllipticalBox(inkex.Effect):
         W = inkex.unittouu( str(W)  + unit )
         D = inkex.unittouu( str(D)  + unit )
         cutDist = inkex.unittouu( str(self.options.cut_dist)  + unit )
-        cutLength = inkex.unittouu( str(self.options.cut_length)  + unit )
 
         svg = self.document.getroot()
         docWidth  = inkex.unittouu(svg.get('width'))
@@ -195,7 +198,7 @@ class EllipticalBox(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         # elliptical sides
-        elCenter = (docWidth / 2, docHeigth / 2)
+        elCenter = (docWidth / 2, 2*D + H/2)
         draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
         draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer)
         el = Ellipse(W, H)
@@ -215,10 +218,15 @@ class EllipticalBox(inkex.Effect):
             bodyCutCount += 1   # same as for the lid: odd number
         bodyCutDist = bodyLength / bodyCutCount
 
+        cutLength = D / cutNr - cutDist
         bodyOrigin = (0, 0)
         for i in range(bodyCutCount):
             x = (bodyOrigin[0] + i * bodyCutDist)
             draw_SVG_line((x, bodyOrigin[1]),(x, bodyOrigin[1] + cutLength/2),'',layer)
+            draw_SVG_line((x, bodyOrigin[1] + D),(x, bodyOrigin[1] + D - cutLength/2),'',layer)
+            for j in range(cutNr -1):
+                y = bodyOrigin[1] + cutLength / 2 + cutDist + j * (cutLength + cutDist)
+                draw_SVG_line((x, y),(x, y + cutLength),'',layer)
         draw_SVG_square((bodyLength, D), bodyOrigin, layer)
         lidOrigin = (0, D)
         draw_SVG_square((lidLength, D), lidOrigin, layer)

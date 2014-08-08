@@ -8,7 +8,7 @@
 	<param name="width" type="float" min="0.0" max="10000.0" _gui-text="Width">10.0</param>
 	<param name="depth" type="float" min="0.0" max="10000.0" _gui-text="Depth">10.0</param>
 	<param name="cut_dist" type="float" min="0.1" max="100.0" _gui-text="Cut distance">1.5</param>
-	<param name="cut_length" type="float" min="0.1" max="100.0" _gui-text="Cut length">30.0</param>
+	<param name="cut_nr" type="int" min="1" max="100" _gui-text="Number of cuts">3</param>
 	<param name="lid_angle" type="float" min="0.0" max="360.0" _gui-text="Lid angle">120</param>
 	<effect>
 		<object-type>all</object-type>
