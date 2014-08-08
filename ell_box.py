@@ -54,6 +54,14 @@ def draw_SVG_arc((rx, ry), x_axis_rot):
     inkex.etree.SubElement(parent, inkex.addNS('path','svg'), drw )
     inkex.addNS('','svg')
 
+def draw_SVG_text((cx, cy), txt, parent):
+    text = inkex.etree.Element(inkex.addNS('text','svg'))
+    text.text = txt
+    text.set('x', str(cx))
+    text.set('y', str(cy))
+    style = {'text-align' : 'center', 'text-anchor': 'middle'}
+    text.set('style', formatStyle(style))
+    parent.append(text)
 
 def SVG_arc_to():
     pass
@@ -84,7 +92,7 @@ class Ellipse():
     def __init__(self, w, h):
         self.h = h
         self.w = w
-        inkex.debug('dimensions ' + str(w) + ' ' + str(h))
+        #inkex.debug('dimensions ' + str(w) + ' ' + str(h))
         self.ellData = [(0, w/2, 0, 0)] # (angle, x, y, cumulative distance from angle = 0)
         angle = 0
         self.angleStep = 2 * pi / self.nrPoints
@@ -115,7 +123,7 @@ class Ellipse():
             len = self.ellData[i2][3] - self.ellData[i1][3]
         else:
             len = self.circumference + self.ellData[i2][3] - self.ellData[i1][3]
-        inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
+        #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
 
 class EllipticalBox(inkex.Effect):
@@ -227,20 +235,20 @@ class EllipticalBox(inkex.Effect):
             for j in range(cutNr -1):
                 y = bodyOrigin[1] + cutLength / 2 + cutDist + j * (cutLength + cutDist)
                 draw_SVG_line((x, y),(x, y + cutLength),'',layer)
+
+        for i in range(bodyCutCount):
+            x = (bodyOrigin[0] + i * bodyCutDist + bodyCutDist / 2)
+            for j in range(cutNr):
+                y = bodyOrigin[1] + cutDist / 2 + j * (cutLength + cutDist)
+                draw_SVG_line((x, y),(x, y + cutLength),'',layer)
+
         draw_SVG_square((bodyLength, D), bodyOrigin, layer)
         lidOrigin = (0, D)
         draw_SVG_square((lidLength, D), lidOrigin, layer)
 
-        inkex.debug('lid %d body %d'%(lidLength, bodyLength))
+        #inkex.debug('lid %d body %d'%(lidLength, bodyLength))
         #inkex.debug(inkex.uutounit(el.distFromAngles(5 * pi/6, pi/6), 'cm'))
-        #Create text element
-        # text = inkex.etree.Element(inkex.addNS('text','svg'))
-        # text.text = 'Hello %s!' % (what)
-        # text.set('x', str(docWidth / 2))
-        # text.set('y', str(docHeight / 2))
-        # style = {'text-align' : 'center', 'text-anchor': 'middle'}
-        # text.set('style', formatStyle(style))
-        # layer.append(text)
+
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
