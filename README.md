@@ -7,6 +7,11 @@ This is a work in progress and not very useful at the moment.
 
 Installation
 ------------
+
 On Windows:
-For a local install copy both files to C:\Users\USERNAME\AppData\Roaming\inkscape\extensions
-For a system wide install copy the files to C:\Program Files\Inkscape\share\extensions
+* Local install: copy both files to C:\Users\USERNAME\AppData\Roaming\inkscape\extensions
+* System wide install copy the files to C:\Program Files\Inkscape\share\extensions
+
+On Linux:
+* Local install: put both files in ~/.config/inkscape/extensions
+* System wide: put them in /usr/share/inkscape/extensions
