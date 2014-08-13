@@ -102,7 +102,7 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
     cutLength = h / hCutCount - cutDist
 
     for i in range(wCutCount):
-        if i%2 == 1: # should we make a notch here?
+        if i%2 == 1: # make a notch here
             inset = thickness
         else:
             inset = 0
@@ -152,6 +152,7 @@ class Ellipse():
             x, y = w/2 * cos(angle), h/2 * sin(angle)
             self.ellData.append((angle, x, y, prev[3] + sqrt((prev[1] - x)**2 + (prev[2] - y)**2)))
         self.circumference = self.ellData[-1][3]
+        inkex.debug("circ: %d"%self.circumference)
 
     def rAngle(self, a):
         """Convert an angle measured from ellipse center to the angle used to generate ellData (used for lookups)"""
@@ -160,21 +161,51 @@ class Ellipse():
             cf = pi
         if a > 3 * pi / 2:
             cf = 2 * pi
-
         return atan(self.w / self.h * tan(a)) + cf
 
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
         i1 = int(self.rAngle(a1) / self.angleStep)
+        p1 = self.rAngle(a1) % self.angleStep
+        l1 = self.ellData[i1 + 1][3] - self.ellData[i1][3]
         i2 = int(self.rAngle(a2) / self.angleStep)
-        if a1 < a2:
-            len = self.ellData[i2][3] - self.ellData[i1][3]
+        p2 = self.rAngle(a2) % self.angleStep
+        l2 = self.ellData[i2 + 1][3] - self.ellData[i2][3]
+        if a1 <= a2:
+            len = self.ellData[i2][3] - self.ellData[i1][3] + l2 * p2 - l1 * p1
         else:
             len = self.circumference + self.ellData[i2][3] - self.ellData[i1][3]
         #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
 
+    def anglesFromDist(self, startAngle, relDist):
+        """Returns the angle that you get when starting at startAngle and moving a distance (dist) in CCW direction"""
+        si = int(self.rAngle(startAngle) / self.angleStep)
+        p = self.rAngle(startAngle) % self.angleStep
+        l = self.ellData[si + 1][3] - self.ellData[si][3]
+        inkex.debug("si %d, p %f, l %f"% (si, p, l))
 
+        startDist = self.ellData[si][3] + p * l
+
+        absDist = relDist + startDist
+
+        #check if we pass through zero
+        inkex.debug("dist 0 %f"%relDist)
+        #dist -= p * l
+        if absDist > self.ellData[-1][3]: # wrap around zero angle
+            absDist -= self.ellData[si][3]
+        inkex.debug("dist 2 %f"%absDist)
+        # binary search
+        iMin = 0
+        iMax = self.nrPoints
+        while iMax - iMin > 1:
+            iHalf = iMin + (iMax - iMin) // 2
+            if self.ellData[iHalf][3] < absDist:
+                iMin = iHalf
+            else:
+                iMax = iHalf
+            inkex.debug("min: %d, max:%d"%(iMin, iMax))
+        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][3])
 
 
 class EllipticalBox(inkex.Effect):
@@ -246,7 +277,6 @@ class EllipticalBox(inkex.Effect):
             error = True
         if error: exit()
 
-
         svg = self.document.getroot()
         docWidth  = inkex.unittouu(svg.get('width'))
         docHeigth = inkex.unittouu(svg.attrib['height'])
@@ -258,7 +288,8 @@ class EllipticalBox(inkex.Effect):
         # elliptical sides
         elCenter = (docWidth / 2, 2*D + H/2)
         draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
-        draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer)
+        draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (0, pi/4))
+
         el = Ellipse(W, H)
 
         #body and lid
@@ -268,6 +299,7 @@ class EllipticalBox(inkex.Effect):
 
         lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
         bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
+        inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, el.anglesFromDist(lidStartAngle, lidLength)*360/2/pi))
 
         _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
         _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
