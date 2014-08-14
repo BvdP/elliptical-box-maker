@@ -100,6 +100,7 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
         wCutCount += 1    # make sure we have an odd number of cuts
     wCutDist = w / wCutCount
     cutLength = h / hCutCount - cutDist
+    notchEdges = [0]
 
     for i in range(wCutCount):
         if i%2 == 1: # make a notch here
@@ -108,6 +109,7 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
             inset = 0
 
         x1 = (X + i * wCutDist)
+        notchEdges.append(x1)
         draw_SVG_line((x1, Y + inset),(x1 + wCutDist, Y + inset), parent)
         draw_SVG_line((x1, Y + h - inset),(x1 + wCutDist, Y + h - inset), parent)
 
@@ -134,6 +136,8 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
     #draw_SVG_square((w, h), origin, parent)
     draw_SVG_line((X, Y),(X, Y + h), parent)
     draw_SVG_line((X + w, Y),(X + w, Y + h), parent)
+    notchEdges.append(w)
+    return notchEdges
 
 class Ellipse():
     nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
@@ -178,7 +182,7 @@ class Ellipse():
         #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
 
-    def anglesFromDist(self, startAngle, relDist):
+    def angleFromDist(self, startAngle, relDist):
         """Returns the angle that you get when starting at startAngle and moving a distance (dist) in CCW direction"""
         si = int(self.rAngle(startAngle) / self.angleStep)
         p = self.rAngle(startAngle) % self.angleStep
@@ -190,11 +194,11 @@ class Ellipse():
         absDist = relDist + startDist
 
         #check if we pass through zero
-        inkex.debug("dist 0 %f"%relDist)
+        inkex.debug("relDist %f"%relDist)
         #dist -= p * l
         if absDist > self.ellData[-1][3]: # wrap around zero angle
             absDist -= self.ellData[si][3]
-        inkex.debug("dist 2 %f"%absDist)
+        inkex.debug("abs dist %f"%absDist)
         # binary search
         iMin = 0
         iMax = self.nrPoints
@@ -204,8 +208,10 @@ class Ellipse():
                 iMin = iHalf
             else:
                 iMax = iHalf
-            inkex.debug("min: %d, max:%d"%(iMin, iMax))
-        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][3])
+            #inkex.debug("min: %d, max:%d"%(iMin, iMax))
+        stepDist =  self.ellData[iMax][3] - self.ellData[iMin][3]
+        inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][3]))
+        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][3])/stepDist
 
 
 class EllipticalBox(inkex.Effect):
@@ -288,7 +294,7 @@ class EllipticalBox(inkex.Effect):
         # elliptical sides
         elCenter = (docWidth / 2, 2*D + H/2)
         draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
-        draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (0, pi/4))
+        #draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (0, pi/4))
 
         el = Ellipse(W, H)
 
@@ -299,10 +305,19 @@ class EllipticalBox(inkex.Effect):
 
         lidLength = el.distFromAngles(lidStartAngle, lidEndAngle)
         bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
-        inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, el.anglesFromDist(lidStartAngle, lidLength)*360/2/pi))
+        inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, el.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
-        _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
-        _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
+        bodyNotches = _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
+        lidNotches = _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
+
+        for n in range(len(bodyNotches)-1):
+            if n%2 == 0:
+                outset = 0
+            else:
+                outset = thickness
+            startA = el.angleFromDist(lidEndAngle, bodyNotches[n])
+            endA = el.angleFromDist(lidEndAngle, bodyNotches[n+1])
+            draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
 
 
 
