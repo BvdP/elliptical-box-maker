@@ -8,40 +8,40 @@ import simplestyle
 from math import *
 
 objStyle = simplestyle.formatStyle(
-    {'stroke'  : '#000000',
-    'stroke-width'  : '0.1',
-    'fill'          : 'none'
+    {'stroke': '#000000',
+    'stroke-width': '0.1',
+    'fill': 'none'
     })
 
 def draw_SVG_square((w,h), (x,y), parent):
     attribs = {
-        'style'     : objStyle,
-        'height'    : str(h),
-        'width'     : str(w),
-        'x'         : str(x),
-        'y'         : str(y)
+        'style': objStyle,
+        'height': str(h),
+        'width': str(w),
+        'x': str(x),
+        'y': str(y)
     }
-    circ = inkex.etree.SubElement(parent, inkex.addNS('rect','svg'), attribs )
+    inkex.etree.SubElement(parent, inkex.addNS('rect', 'svg'), attribs)
 
-def draw_SVG_ellipse((rx, ry), (cx, cy), parent, start_end=(0, 2*pi), transform='' ):
-    ell_attribs = {'style':objStyle,
-        inkex.addNS('cx','sodipodi')        :str(cx),
-        inkex.addNS('cy','sodipodi')        :str(cy),
-        inkex.addNS('rx','sodipodi')        :str(rx),
-        inkex.addNS('ry','sodipodi')        :str(ry),
-        inkex.addNS('start','sodipodi')     :str(start_end[0]),
-        inkex.addNS('end','sodipodi')       :str(start_end[1]),
-        inkex.addNS('open','sodipodi')      :'true',    #all ellipse sectors we will draw are open
-        inkex.addNS('type','sodipodi')      :'arc',
-        'transform'                         :transform
+def draw_SVG_ellipse((rx, ry), (cx, cy), parent, start_end=(0, 2*pi), transform=''):
+    ell_attribs = {'style': objStyle,
+        inkex.addNS('cx', 'sodipodi'): str(cx),
+        inkex.addNS('cy', 'sodipodi'): str(cy),
+        inkex.addNS('rx', 'sodipodi'): str(rx),
+        inkex.addNS('ry', 'sodipodi'): str(ry),
+        inkex.addNS('start', 'sodipodi'): str(start_end[0]),
+        inkex.addNS('end', 'sodipodi'): str(start_end[1]),
+        inkex.addNS('open', 'sodipodi'): 'true',  #all ellipse sectors we will draw are open
+        inkex.addNS('type', 'sodipodi'): 'arc',
+        'transform': transform
     }
-    ell = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), ell_attribs )
+    inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), ell_attribs)
 
 
 def draw_SVG_arc((rx, ry), x_axis_rot):
     arc_attribs = {'style': objStyle,
-        'rx' : str(rx),
-        'ry' : str(ry),
+        'rx': str(rx),
+        'ry': str(ry),
         'x-axis-rotation': str(x_axis_rot),
         'large-arc': '',
         'sweep': '',
@@ -49,32 +49,37 @@ def draw_SVG_arc((rx, ry), x_axis_rot):
         'y': ''
         }
         #name='part'
-    style = { 'stroke': '#000000', 'fill': 'none' }
+    style = {'stroke': '#000000', 'fill': 'none'}
     drw = {'style':simplestyle.formatStyle(style),inkex.addNS('label','inkscape'):name,'d':XYstring}
-    inkex.etree.SubElement(parent, inkex.addNS('path','svg'), drw )
-    inkex.addNS('','svg')
+    inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), drw)
+    inkex.addNS('', 'svg')
 
 def draw_SVG_text((cx, cy), txt, parent):
-    text = inkex.etree.Element(inkex.addNS('text','svg'))
+    text = inkex.etree.Element(inkex.addNS('text', 'svg'))
     text.text = txt
     text.set('x', str(cx))
     text.set('y', str(cy))
-    style = {'text-align' : 'center', 'text-anchor': 'middle'}
+    style = {'text-align': 'center', 'text-anchor': 'middle'}
     text.set('style', formatStyle(style))
     parent.append(text)
+
 
 def SVG_move_to(x, y):
     return "M %d %d" % (x, y)
 
+
 def SVG_line_to(x, y):
     return "L %d %d" % (x, y)
+
 
 def SVG_arc_to(rx, ry, x, y):
     la = sw = 0
     return "A %d %d 0 %d %d" % (rx, ry, la, sw, x, y)
 
+
 def SVG_path(components):
     return '<path d="' + ' '.join(components) + '">'
+
 
 def SVG_curve(parent, segments, style, closed=True):
     #pathStr = 'M '+ segments[0]
@@ -83,15 +88,15 @@ def SVG_curve(parent, segments, style, closed=True):
         pathStr += ' z'
     attributes = {
       'style': style,
-      'd'    : pathStr}
-    path = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), attributes )
+      'd': pathStr}
+    inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), attributes)
 
 #draw an SVG line segment between the given (raw) points
 def draw_SVG_line( (x1, y1), (x2, y2), parent):
-    line_attribs = {'style' : objStyle,
-                    'd' : 'M '+str(x1)+','+str(y1)+' L '+str(x2)+','+str(y2)}
+    line_attribs = {'style': objStyle,
+                    'd': 'M '+str(x1)+','+str(y1)+' L '+str(x2)+','+str(y2)}
 
-    line = inkex.etree.SubElement(parent, inkex.addNS('path','svg'), line_attribs )
+    inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
 def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
@@ -103,23 +108,23 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
     notchEdges = [0]
 
     for i in range(wCutCount):
-        if i%2 == 1: # make a notch here
+        if i % 2 == 1:  # make a notch here
             inset = thickness
         else:
             inset = 0
 
         x1 = (X + i * wCutDist)
         notchEdges.append(x1)
-        draw_SVG_line((x1, Y + inset),(x1 + wCutDist, Y + inset), parent)
-        draw_SVG_line((x1, Y + h - inset),(x1 + wCutDist, Y + h - inset), parent)
+        draw_SVG_line((x1, Y + inset), (x1 + wCutDist, Y + inset), parent)
+        draw_SVG_line((x1, Y + h - inset), (x1 + wCutDist, Y + h - inset), parent)
 
         if i > 0:
-            draw_SVG_line((x1, Y),(x1, Y + cutLength / 2), parent)
-            draw_SVG_line((x1, Y + h),(x1, Y + h - cutLength/2), parent)
+            draw_SVG_line((x1, Y), (x1, Y + cutLength / 2), parent)
+            draw_SVG_line((x1, Y + h), (x1, Y + h - cutLength / 2), parent)
 
-            for j in range(hCutCount -1):
+            for j in range(hCutCount - 1):
                 y = Y + cutLength / 2 + cutDist + j * (cutLength + cutDist)
-                draw_SVG_line((x1, y),(x1, y + cutLength), parent)
+                draw_SVG_line((x1, y), (x1, y + cutLength), parent)
 
         x2 = (X + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
@@ -128,14 +133,14 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
             if j == 0:  # first row
                 y += inset
                 cl -= inset
-            elif j == hCutCount -1: # last row
+            elif j == hCutCount - 1:  # last row
                 cl -= inset
 
-            draw_SVG_line((x2, y),(x2, y + cl), parent)
+            draw_SVG_line((x2, y), (x2, y + cl), parent)
 
     #draw_SVG_square((w, h), origin, parent)
-    draw_SVG_line((X, Y),(X, Y + h), parent)
-    draw_SVG_line((X + w, Y),(X + w, Y + h), parent)
+    draw_SVG_line((X, Y), (X, Y + h), parent)
+    draw_SVG_line((X + w, Y), (X + w, Y + h), parent)
     notchEdges.append(w)
     return notchEdges
 
@@ -153,15 +158,15 @@ class Ellipse():
         for i in range(self.nrPoints):
             angle += self.angleStep
             prev = self.ellData[-1]
-            x, y = w/2 * cos(angle), h/2 * sin(angle)
+            x, y = w / 2 * cos(angle), h / 2 * sin(angle)
             self.ellData.append((angle, x, y, prev[3] + sqrt((prev[1] - x)**2 + (prev[2] - y)**2)))
         self.circumference = self.ellData[-1][3]
-        inkex.debug("circ: %d"%self.circumference)
+        inkex.debug("circ: %d" % self.circumference)
 
     def rAngle(self, a):
         """Convert an angle measured from ellipse center to the angle used to generate ellData (used for lookups)"""
         cf = 0
-        if a > pi / 2 :
+        if a > pi / 2:
             cf = pi
         if a > 3 * pi / 2:
             cf = 2 * pi
@@ -187,18 +192,18 @@ class Ellipse():
         si = int(self.rAngle(startAngle) / self.angleStep)
         p = self.rAngle(startAngle) % self.angleStep
         l = self.ellData[si + 1][3] - self.ellData[si][3]
-        inkex.debug("si %d, p %f, l %f"% (si, p, l))
+        inkex.debug("si %d, p %f, l %f" % (si, p, l))
 
         startDist = self.ellData[si][3] + p * l
 
         absDist = relDist + startDist
 
         #check if we pass through zero
-        inkex.debug("relDist %f"%relDist)
+        inkex.debug("relDist %f" % relDist)
         #dist -= p * l
-        if absDist > self.ellData[-1][3]: # wrap around zero angle
+        if absDist > self.ellData[-1][3]:  # wrap around zero angle
             absDist -= self.ellData[si][3]
-        inkex.debug("abs dist %f"%absDist)
+        inkex.debug("abs dist %f" % absDist)
         # binary search
         iMin = 0
         iMax = self.nrPoints
@@ -209,7 +214,7 @@ class Ellipse():
             else:
                 iMax = iHalf
             #inkex.debug("min: %d, max:%d"%(iMin, iMax))
-        stepDist =  self.ellData[iMax][3] - self.ellData[iMin][3]
+        stepDist = self.ellData[iMax][3] - self.ellData[iMin][3]
         inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][3]))
         return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][3])/stepDist
 
@@ -265,26 +270,27 @@ class EllipticalBox(inkex.Effect):
 
         # convert units
         unit = 'mm'
-        H = inkex.unittouu( str(self.options.heigth)  + unit )
-        W = inkex.unittouu( str(self.options.width)  + unit )
-        D = inkex.unittouu( str(self.options.depth)  + unit )
+        H = inkex.unittouu(str(self.options.heigth) + unit)
+        W = inkex.unittouu(str(self.options.width) + unit)
+        D = inkex.unittouu(str(self.options.depth) + unit)
         thickness = inkex.unittouu(str(self.options.thickness) + unit)
-        cutDist = inkex.unittouu( str(self.options.cut_dist)  + unit )
+        cutDist = inkex.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
 
         # input sanity check
         error = False
-        if min(H, W, D)==0:
+        if min(H, W, D) == 0:
             inkex.errormsg(_('Error: Dimensions must be non zero'))
             error = True
 
         if cutNr < 1:
             inkex.errormsg(_('Error: Number of cuts should be at least 1'))
             error = True
-        if error: exit()
+        if error:
+            exit()
 
         svg = self.document.getroot()
-        docWidth  = inkex.unittouu(svg.get('width'))
+        docWidth = inkex.unittouu(svg.get('width'))
         docHeigth = inkex.unittouu(svg.attrib['height'])
 
         layer = inkex.etree.SubElement(svg, 'g')
@@ -292,7 +298,7 @@ class EllipticalBox(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         # elliptical sides
-        elCenter = (docWidth / 2, 2*D + H/2)
+        elCenter = (docWidth / 2, 2 * D + H / 2)
         draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
         #draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (0, pi/4))
 
@@ -310,15 +316,14 @@ class EllipticalBox(inkex.Effect):
         bodyNotches = _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
         lidNotches = _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
 
-        for n in range(len(bodyNotches)-1):
-            if n%2 == 0:
+        for n in range(len(bodyNotches) - 1):
+            if n % 2 == 0:
                 outset = 0
             else:
                 outset = thickness
             startA = el.angleFromDist(lidEndAngle, bodyNotches[n])
-            endA = el.angleFromDist(lidEndAngle, bodyNotches[n+1])
+            endA = el.angleFromDist(lidEndAngle, bodyNotches[n + 1])
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
-
 
 
 # Create effect instance and apply it.
