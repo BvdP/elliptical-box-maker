@@ -219,6 +219,21 @@ class Ellipse():
         return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][3])/stepDist
 
 
+class Coordinate:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other):
+        return Coordinate(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other):
+        return Coordinate(self.x - other.x, self.y - other.y)
+
+    def __mul__(self, factor):
+        return Coordinate(self.x * factor, self.y * factor)
+
+
 class EllipticalBox(inkex.Effect):
     """
     Creates a new layer with the drawings for a parametrically generaded box.
@@ -324,7 +339,6 @@ class EllipticalBox(inkex.Effect):
             startA = el.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = el.angleFromDist(lidEndAngle, bodyNotches[n + 1])
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
-
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
