@@ -99,7 +99,7 @@ def draw_SVG_line( (x1, y1), (x2, y2), parent):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
-def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
+def _makeCurvedSurface(center, (w, h), cutDist, hCutCount, thickness, parent):
     wCutCount = int(floor(w / cutDist))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
@@ -113,22 +113,22 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
         else:
             inset = 0
 
-        x1 = (X + i * wCutDist)
+        x1 = (center.x + i * wCutDist)
         notchEdges.append(x1)
-        draw_SVG_line((x1, Y + inset), (x1 + wCutDist, Y + inset), parent)
-        draw_SVG_line((x1, Y + h - inset), (x1 + wCutDist, Y + h - inset), parent)
+        draw_SVG_line((x1, center.y + inset), (x1 + wCutDist, center.y + inset), parent)
+        draw_SVG_line((x1, center.y + h - inset), (x1 + wCutDist, center.y + h - inset), parent)
 
         if i > 0:
-            draw_SVG_line((x1, Y), (x1, Y + cutLength / 2), parent)
-            draw_SVG_line((x1, Y + h), (x1, Y + h - cutLength / 2), parent)
+            draw_SVG_line((x1, center.y), (x1, center.y + cutLength / 2), parent)
+            draw_SVG_line((x1, center.y + h), (x1, center.y + h - cutLength / 2), parent)
 
             for j in range(hCutCount - 1):
-                y = Y + cutLength / 2 + cutDist + j * (cutLength + cutDist)
+                y = center.y + cutLength / 2 + cutDist + j * (cutLength + cutDist)
                 draw_SVG_line((x1, y), (x1, y + cutLength), parent)
 
-        x2 = (X + i * wCutDist + wCutDist / 2)
+        x2 = (center.x + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
-            y = Y + cutDist / 2 + j * (cutLength + cutDist)
+            y = center.y + cutDist / 2 + j * (cutLength + cutDist)
             cl = cutLength
             if j == 0:  # first row
                 y += inset
@@ -139,8 +139,8 @@ def _makeCurvedSurface((X, Y), (w, h), cutDist, hCutCount, thickness, parent):
             draw_SVG_line((x2, y), (x2, y + cl), parent)
 
     #draw_SVG_square((w, h), origin, parent)
-    draw_SVG_line((X, Y), (X, Y + h), parent)
-    draw_SVG_line((X + w, Y), (X + w, Y + h), parent)
+    draw_SVG_line((center.x, center.y), (center.x, center.y + h), parent)
+    draw_SVG_line((center.x + w, center.y), (center.x + w, center.y + h), parent)
     notchEdges.append(w)
     return notchEdges
 
@@ -150,7 +150,7 @@ class Ellipse():
     def __init__(self, w, h):
         self.h = h
         self.w = w
-        self.ellData = [(0, w/2, 0, 0)] # (angle, x, y, cumulative distance from angle = 0)
+        self.ellData = [(0, Coordinate(w/2, 0), 0)] # (angle, x, y, cumulative distance from angle = 0)
         angle = 0
         self.angleStep = 2 * pi / self.nrPoints
         #note: the render angle (ra) corresponds to the angle from the ellipse center (ca) according to:
@@ -159,8 +159,8 @@ class Ellipse():
             angle += self.angleStep
             prev = self.ellData[-1]
             x, y = w / 2 * cos(angle), h / 2 * sin(angle)
-            self.ellData.append((angle, x, y, prev[3] + sqrt((prev[1] - x)**2 + (prev[2] - y)**2)))
-        self.circumference = self.ellData[-1][3]
+            self.ellData.append((angle, Coordinate(x, y), prev[2] + sqrt((prev[1].x - x)**2 + (prev[1].y - y)**2)))
+        self.circumference = self.ellData[-1][2]
         inkex.debug("circ: %d" % self.circumference)
 
     def rAngle(self, a):
@@ -176,14 +176,14 @@ class Ellipse():
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
         i1 = int(self.rAngle(a1) / self.angleStep)
         p1 = self.rAngle(a1) % self.angleStep
-        l1 = self.ellData[i1 + 1][3] - self.ellData[i1][3]
+        l1 = self.ellData[i1 + 1][2] - self.ellData[i1][2]
         i2 = int(self.rAngle(a2) / self.angleStep)
         p2 = self.rAngle(a2) % self.angleStep
-        l2 = self.ellData[i2 + 1][3] - self.ellData[i2][3]
+        l2 = self.ellData[i2 + 1][2] - self.ellData[i2][2]
         if a1 <= a2:
-            len = self.ellData[i2][3] - self.ellData[i1][3] + l2 * p2 - l1 * p1
+            len = self.ellData[i2][2] - self.ellData[i1][2] + l2 * p2 - l1 * p1
         else:
-            len = self.circumference + self.ellData[i2][3] - self.ellData[i1][3]
+            len = self.circumference + self.ellData[i2][2] - self.ellData[i1][2]
         #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
 
@@ -191,32 +191,32 @@ class Ellipse():
         """Returns the angle that you get when starting at startAngle and moving a distance (dist) in CCW direction"""
         si = int(self.rAngle(startAngle) / self.angleStep)
         p = self.rAngle(startAngle) % self.angleStep
-        l = self.ellData[si + 1][3] - self.ellData[si][3]
+        l = self.ellData[si + 1][2] - self.ellData[si][2]
         inkex.debug("si %d, p %f, l %f" % (si, p, l))
 
-        startDist = self.ellData[si][3] + p * l
+        startDist = self.ellData[si][2] + p * l
 
         absDist = relDist + startDist
 
         #check if we pass through zero
         inkex.debug("relDist %f" % relDist)
         #dist -= p * l
-        if absDist > self.ellData[-1][3]:  # wrap around zero angle
-            absDist -= self.ellData[si][3]
+        if absDist > self.ellData[-1][2]:  # wrap around zero angle
+            absDist -= self.ellData[si][2]
         inkex.debug("abs dist %f" % absDist)
         # binary search
         iMin = 0
         iMax = self.nrPoints
         while iMax - iMin > 1:
             iHalf = iMin + (iMax - iMin) // 2
-            if self.ellData[iHalf][3] < absDist:
+            if self.ellData[iHalf][2] < absDist:
                 iMin = iHalf
             else:
                 iMax = iHalf
             #inkex.debug("min: %d, max:%d"%(iMin, iMax))
-        stepDist = self.ellData[iMax][3] - self.ellData[iMin][3]
-        inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][3]))
-        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][3])/stepDist
+        stepDist = self.ellData[iMax][2] - self.ellData[iMin][2]
+        inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][2]))
+        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][2])/stepDist
 
 
 class Coordinate:
@@ -328,8 +328,8 @@ class EllipticalBox(inkex.Effect):
         bodyLength = el.distFromAngles(lidEndAngle, lidStartAngle)
         inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, el.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
-        bodyNotches = _makeCurvedSurface((0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
-        lidNotches = _makeCurvedSurface((0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
+        bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
 
         for n in range(len(bodyNotches) - 1):
             if n % 2 == 0:
