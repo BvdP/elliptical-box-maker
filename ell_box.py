@@ -7,6 +7,7 @@ import inkex
 import simplestyle
 from math import *
 from collections import namedtuple
+import traceback
 
 objStyle = simplestyle.formatStyle(
     {'stroke': '#000000',
@@ -24,10 +25,10 @@ def draw_SVG_square((w,h), (x,y), parent):
     }
     inkex.etree.SubElement(parent, inkex.addNS('rect', 'svg'), attribs)
 
-def draw_SVG_ellipse((rx, ry), (cx, cy), parent, start_end=(0, 2*pi), transform=''):
+def draw_SVG_ellipse((rx, ry), center, parent, start_end=(0, 2*pi), transform=''):
     ell_attribs = {'style': objStyle,
-        inkex.addNS('cx', 'sodipodi'): str(cx),
-        inkex.addNS('cy', 'sodipodi'): str(cy),
+        inkex.addNS('cx', 'sodipodi'): str(center.x),
+        inkex.addNS('cy', 'sodipodi'): str(center.y),
         inkex.addNS('rx', 'sodipodi'): str(rx),
         inkex.addNS('ry', 'sodipodi'): str(ry),
         inkex.addNS('start', 'sodipodi'): str(start_end[0]),
@@ -179,9 +180,9 @@ class Ellipse():
         i = int(self.rAngle(angle) / self.angleStep)
         p = self.rAngle(angle) % self.angleStep
         #l = self.ellData[i + 1][3] - self.ellData[i][3]
-        c1 = (self.ellData[i].coord, self.ellData[i].cDist)
-        c2 = (self.ellData[i + 1].coord, self.ellData[i + 1].cDist)
-        return ((c1[0] + c2[0]) / 2, (c1[1] + c2[1]) / 2)
+        c1 = self.ellData[i].coord
+        c2 = self.ellData[i + 1].coord
+        return c1 * p + c2 * (p - 1)
 
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
@@ -332,7 +333,7 @@ class EllipticalBox(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         # elliptical sides
-        elCenter = (docWidth / 2, 2 * D + H / 2)
+        elCenter = Coordinate(docWidth / 2, 2 * D + H / 2)
         draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
         #draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (0, pi/4))
 
@@ -360,7 +361,8 @@ class EllipticalBox(inkex.Effect):
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
             c1 = el.coordinatesFromAngle(endA)
 
-            #draw_SVG_line(c, (, ), layer)
+            c2 = (c1 - elCenter)
+            #draw_SVG_line((c1.x, c1.y) (, ), layer)
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
