@@ -6,6 +6,7 @@ import inkex
 #from simplestyle import *
 import simplestyle
 from math import *
+from collections import namedtuple
 
 objStyle = simplestyle.formatStyle(
     {'stroke': '#000000',
@@ -150,7 +151,8 @@ class Ellipse():
     def __init__(self, w, h):
         self.h = h
         self.w = w
-        self.ellData = [(0, Coordinate(w/2, 0), 0)] # (angle, x, y, cumulative distance from angle = 0)
+        EllipsePoint = namedtuple('EllipsePoint', 'angle coord cDist')
+        self.ellData = [EllipsePoint(0, Coordinate(w/2, 0), 0)] # (angle, x, y, cumulative distance from angle = 0)
         angle = 0
         self.angleStep = 2 * pi / self.nrPoints
         #note: the render angle (ra) corresponds to the angle from the ellipse center (ca) according to:
@@ -159,8 +161,8 @@ class Ellipse():
             angle += self.angleStep
             prev = self.ellData[-1]
             x, y = w / 2 * cos(angle), h / 2 * sin(angle)
-            self.ellData.append((angle, Coordinate(x, y), prev[2] + sqrt((prev[1].x - x)**2 + (prev[1].y - y)**2)))
-        self.circumference = self.ellData[-1][2]
+            self.ellData.append(EllipsePoint(angle, Coordinate(x, y), prev.cDist + sqrt((prev.coord.x - x)**2 + (prev.coord.y - y)**2)))
+        self.circumference = self.ellData[-1].cDist
         inkex.debug("circ: %d" % self.circumference)
 
     def rAngle(self, a):
@@ -202,7 +204,7 @@ class Ellipse():
         p = self.rAngle(startAngle) % self.angleStep
 
         l = self.ellData[si + 1][2] - self.ellData[si][2]
-        inkex.debug("si %d, p %f, l %f" % (si, p, l))
+        #inkex.debug("si %d, p %f, l %f" % (si, p, l))
 
         startDist = self.ellData[si][2] + p * l
 
@@ -213,7 +215,7 @@ class Ellipse():
         #dist -= p * l
         if absDist > self.ellData[-1][2]:  # wrap around zero angle
             absDist -= self.ellData[si][2]
-        inkex.debug("abs dist %f" % absDist)
+        #inkex.debug("abs dist %f" % absDist)
 
         # binary search
         iMin = 0
@@ -229,7 +231,7 @@ class Ellipse():
 
             #inkex.debug("min: %d, max:%d"%(iMin, iMax))
         stepDist = self.ellData[iMax][2] - self.ellData[iMin][2]
-        inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][2]))
+        #inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][2]))
         return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][2])/stepDist
 
 
