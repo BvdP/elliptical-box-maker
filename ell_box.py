@@ -179,22 +179,22 @@ class Ellipse():
         i = int(self.rAngle(angle) / self.angleStep)
         p = self.rAngle(angle) % self.angleStep
         #l = self.ellData[i + 1][3] - self.ellData[i][3]
-        c1 = (self.ellData[i][1], self.ellData[i][2])
-        c2 = (self.ellData[i + 1][1], self.ellData[i + 1][2])
+        c1 = (self.ellData[i].coord, self.ellData[i].cDist)
+        c2 = (self.ellData[i + 1].coord, self.ellData[i + 1].cDist)
         return ((c1[0] + c2[0]) / 2, (c1[1] + c2[1]) / 2)
 
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
         i1 = int(self.rAngle(a1) / self.angleStep)
         p1 = self.rAngle(a1) % self.angleStep
-        l1 = self.ellData[i1 + 1][2] - self.ellData[i1][2]
+        l1 = self.ellData[i1 + 1].cDist - self.ellData[i1].cDist
         i2 = int(self.rAngle(a2) / self.angleStep)
         p2 = self.rAngle(a2) % self.angleStep
-        l2 = self.ellData[i2 + 1][2] - self.ellData[i2][2]
+        l2 = self.ellData[i2 + 1].cDist - self.ellData[i2].cDist
         if a1 <= a2:
-            len = self.ellData[i2][2] - self.ellData[i1][2] + l2 * p2 - l1 * p1
+            len = self.ellData[i2].cDist - self.ellData[i1].cDist + l2 * p2 - l1 * p1
         else:
-            len = self.circumference + self.ellData[i2][2] - self.ellData[i1][2]
+            len = self.circumference + self.ellData[i2].cDist - self.ellData[i1].cDist
         #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
 
@@ -203,18 +203,18 @@ class Ellipse():
         si = int(self.rAngle(startAngle) / self.angleStep)
         p = self.rAngle(startAngle) % self.angleStep
 
-        l = self.ellData[si + 1][2] - self.ellData[si][2]
+        l = self.ellData[si + 1].cDist - self.ellData[si].cDist
         #inkex.debug("si %d, p %f, l %f" % (si, p, l))
 
-        startDist = self.ellData[si][2] + p * l
+        startDist = self.ellData[si].cDist + p * l
 
         absDist = relDist + startDist
 
         #check if we pass through zero
         #inkex.debug("relDist %f" % relDist)
         #dist -= p * l
-        if absDist > self.ellData[-1][2]:  # wrap around zero angle
-            absDist -= self.ellData[si][2]
+        if absDist > self.ellData[-1].cDist:  # wrap around zero angle
+            absDist -= self.ellData[si].cDist
         #inkex.debug("abs dist %f" % absDist)
 
         # binary search
@@ -224,15 +224,15 @@ class Ellipse():
         while iMax - iMin > 1:
             count += 1
             iHalf = iMin + (iMax - iMin) // 2
-            if self.ellData[iHalf][2] < absDist:
+            if self.ellData[iHalf].cDist < absDist:
                 iMin = iHalf
             else:
                 iMax = iHalf
 
             #inkex.debug("min: %d, max:%d"%(iMin, iMax))
-        stepDist = self.ellData[iMax][2] - self.ellData[iMin][2]
-        #inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][2]))
-        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin][2])/stepDist
+        stepDist = self.ellData[iMax].cDist - self.ellData[iMin].cDist
+        #inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin].cDist))
+        return self.ellData[iMin][0] + self.angleStep * (absDist - self.ellData[iMin].cDist)/stepDist
 
 
 class Coordinate:
