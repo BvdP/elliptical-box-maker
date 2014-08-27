@@ -145,7 +145,7 @@ def _makeCurvedSurface(center, (w, h), cutDist, hCutCount, thickness, parent):
     return notchEdges
 
 class Ellipse():
-    nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
+    nrPoints = 10 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
 
     def __init__(self, w, h):
         self.h = h
@@ -172,6 +172,15 @@ class Ellipse():
             cf = 2 * pi
         return atan(self.w / self.h * tan(a)) + cf
 
+    def coordinatesFromAngle(self, angle):
+        """Coordinate of the point at angle."""
+        i = int(self.rAngle(angle) / self.angleStep)
+        p = self.rAngle(angle) % self.angleStep
+        #l = self.ellData[i + 1][3] - self.ellData[i][3]
+        c1 = (self.ellData[i][1], self.ellData[i][2])
+        c2 = (self.ellData[i + 1][1], self.ellData[i + 1][2])
+        return ((c1[0] + c2[0]) / 2, (c1[1] + c2[1]) / 2)
+
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
         i1 = int(self.rAngle(a1) / self.angleStep)
@@ -191,6 +200,7 @@ class Ellipse():
         """Returns the angle that you get when starting at startAngle and moving a distance (dist) in CCW direction"""
         si = int(self.rAngle(startAngle) / self.angleStep)
         p = self.rAngle(startAngle) % self.angleStep
+
         l = self.ellData[si + 1][2] - self.ellData[si][2]
         inkex.debug("si %d, p %f, l %f" % (si, p, l))
 
@@ -199,20 +209,24 @@ class Ellipse():
         absDist = relDist + startDist
 
         #check if we pass through zero
-        inkex.debug("relDist %f" % relDist)
+        #inkex.debug("relDist %f" % relDist)
         #dist -= p * l
         if absDist > self.ellData[-1][2]:  # wrap around zero angle
             absDist -= self.ellData[si][2]
         inkex.debug("abs dist %f" % absDist)
+
         # binary search
         iMin = 0
         iMax = self.nrPoints
+        count = 0
         while iMax - iMin > 1:
+            count += 1
             iHalf = iMin + (iMax - iMin) // 2
             if self.ellData[iHalf][2] < absDist:
                 iMin = iHalf
             else:
                 iMax = iHalf
+
             #inkex.debug("min: %d, max:%d"%(iMin, iMax))
         stepDist = self.ellData[iMax][2] - self.ellData[iMin][2]
         inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin][2]))
@@ -232,6 +246,9 @@ class Coordinate:
 
     def __mul__(self, factor):
         return Coordinate(self.x * factor, self.y * factor)
+
+    def __div__(self, quotient):
+        return Coordinate(self.x / quotient, self.y / quotient)
 
 
 class EllipticalBox(inkex.Effect):
@@ -339,6 +356,9 @@ class EllipticalBox(inkex.Effect):
             startA = el.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = el.angleFromDist(lidEndAngle, bodyNotches[n + 1])
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
+            c1 = el.coordinatesFromAngle(endA)
+
+            #draw_SVG_line(c, (, ), layer)
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
