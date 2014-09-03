@@ -178,6 +178,33 @@ class Ellipse():
         """Coordinate of the point at angle."""
         return Coordinate(self.w / 2 * cos(angle), self.h / 2 * sin(angle))
 
+    def notchData(self, angle, notchHeight):
+        """Coordinate and angle for a notch at the given angle. The notch is perpendicular to the ellipse."""
+        angle = angle % (2 * pi)
+        #some special cases to avoid divide by zero:
+        if angle == 0:
+            return (0, Coordinate(self.w / 2 + notchHeight, 0))
+        elif angle == pi:
+            return (pi, Coordinate(-self.w / 2 - notchHeight, 0))
+        elif angle == pi / 2:
+            return(pi / 2, Coordinate(0, self.h / 2 + notchHeight))
+        elif angle == 3 * pi / 2:
+            return(3 * pi / 2, Coordinate(0, -self.h / 2 - notchHeight))
+
+        x = self.w / 2 * cos(angle)
+        derivative = self.h / self.w * -x / sqrt((self.w / 2) ** 2 - x ** 2)
+        if angle > pi:
+            derivative = -derivative
+
+        normal = -1 / derivative
+        nAngle = atan(normal)
+        if angle > pi / 2 and angle < 3 * pi / 2:
+            nAngle += pi
+
+        nCoordinate = self.coordinateFromAngle(angle) + Coordinate(cos(nAngle), sin(nAngle)) * notchHeight
+        return(nAngle, nCoordinate)
+
+
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
         i1 = int(self.rAngle(a1) / self.angleStep)
@@ -345,7 +372,10 @@ class EllipticalBox(inkex.Effect):
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
             cfa1 = ell1.coordinateFromAngle(endA)
             c1 = elCenter + cfa1
-            c2 = elCenter + ell2.coordinateFromAngle(endA)
+            #c2 = elCenter + ell2.coordinateFromAngle(endA)
+            a2, c2 = ell1.notchData(endA, thickness)
+
+            c2 += elCenter
             draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
 
 # Create effect instance and apply it.
