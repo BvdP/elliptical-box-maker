@@ -140,7 +140,6 @@ def _makeCurvedSurface(center, (w, h), cutDist, hCutCount, thickness, parent):
 
             draw_SVG_line((x2, y), (x2, y + cl), parent)
 
-    #draw_SVG_square((w, h), origin, parent)
     draw_SVG_line((center.x, center.y), (center.x, center.y + h), parent)
     draw_SVG_line((center.x + w, center.y), (center.x + w, center.y + h), parent)
     notchEdges.append(w)
@@ -180,7 +179,6 @@ class Ellipse():
         # uses linear interpolation but just calculating it would be better
         i = int(angle / self.angleStep)
         p = angle % self.angleStep
-        #l = self.ellData[i + 1][3] - self.ellData[i][3]
         c1 = self.ellData[i].coord
         c2 = self.ellData[i + 1].coord
         return c1 * p + c2 * (1 - p)
@@ -197,7 +195,6 @@ class Ellipse():
             len = self.ellData[i2].cDist - self.ellData[i1].cDist + l2 * p2 - l1 * p1
         else:
             len = self.circumference + self.ellData[i2].cDist - self.ellData[i1].cDist
-        #inkex.debug('angle: ' + str(a2) + ' rAngle: ' + str(self.rAngle(a2))+ ' idx: '+ str(i2))
         return len
 
     def angleFromDist(self, startAngle, relDist):
@@ -206,24 +203,18 @@ class Ellipse():
         p = self.rAngle(startAngle) % self.angleStep
 
         l = self.ellData[si + 1].cDist - self.ellData[si].cDist
-        #inkex.debug("si %d, p %f, l %f" % (si, p, l))
 
         startDist = self.ellData[si].cDist + p * l
 
         absDist = relDist + startDist
 
-        #check if we pass through zero
-        #inkex.debug("relDist %f" % relDist)
-        #dist -= p * l
         if absDist > self.ellData[-1].cDist:  # wrap around zero angle
             absDist -= self.ellData[-1].cDist
-        #inkex.debug("abs dist %f" % absDist)
 
-        # binary search
         iMin = 0
         iMax = self.nrPoints
         count = 0
-        while iMax - iMin > 1:
+        while iMax - iMin > 1:  # binary search
             count += 1
             iHalf = iMin + (iMax - iMin) // 2
             if self.ellData[iHalf].cDist < absDist:
@@ -231,9 +222,7 @@ class Ellipse():
             else:
                 iMax = iHalf
 
-            #inkex.debug("min: %d, max:%d"%(iMin, iMax))
         stepDist = self.ellData[iMax].cDist - self.ellData[iMin].cDist
-        #inkex.debug("angle:%f, angle/step:%f, step dist:%f, abs dist:%f, dist at last step%f"%(self.ellData[iMin][0], self.angleStep, stepDist, absDist, self.ellData[iMin].cDist))
         return self.ellData[iMin].angle + self.angleStep * (absDist - self.ellData[iMin].cDist)/stepDist
 
 
@@ -335,8 +324,6 @@ class EllipticalBox(inkex.Effect):
 
         # elliptical sides
         elCenter = Coordinate(docWidth / 2, 2 * D + H / 2)
-        #draw_SVG_ellipse((W / 2, H / 2), elCenter, layer)
-        #draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (0, pi/4))
 
         ell1 = Ellipse(W, H)
         ell2 = Ellipse(W + 2 * thickness, H + 2 * thickness)
