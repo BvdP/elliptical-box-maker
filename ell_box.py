@@ -174,14 +174,9 @@ class Ellipse():
             cf = 2 * pi
         return atan(self.w / self.h * tan(a)) + cf
 
-    def coordinatesFromAngle(self, angle):
+    def coordinateFromAngle(self, angle):
         """Coordinate of the point at angle."""
-        # uses linear interpolation but just calculating it would be better
-        i = int(angle / self.angleStep)
-        p = angle % self.angleStep
-        c1 = self.ellData[i].coord
-        c2 = self.ellData[i + 1].coord
-        return c1 * p + c2 * (1 - p)
+        return Coordinate(self.w / 2 * cos(angle), self.h / 2 * sin(angle))
 
     def distFromAngles(self, a1, a2):
         """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
@@ -348,9 +343,9 @@ class EllipticalBox(inkex.Effect):
             startA = ell1.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell1.angleFromDist(lidEndAngle, bodyNotches[n + 1])
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
-            cfa1 = ell1.coordinatesFromAngle(endA)
+            cfa1 = ell1.coordinateFromAngle(endA)
             c1 = elCenter + cfa1
-            c2 = elCenter + ell2.coordinatesFromAngle(endA)
+            c2 = elCenter + ell2.coordinateFromAngle(endA)
             draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
 
 # Create effect instance and apply it.
