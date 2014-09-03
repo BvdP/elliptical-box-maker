@@ -178,8 +178,8 @@ class Ellipse():
     def coordinatesFromAngle(self, angle):
         """Coordinate of the point at angle."""
         # uses linear interpolation but just calculating it would be better
-        i = int(self.rAngle(angle) / self.angleStep)
-        p = self.rAngle(angle) % self.angleStep
+        i = int(angle / self.angleStep)
+        p = angle % self.angleStep
         #l = self.ellData[i + 1][3] - self.ellData[i][3]
         c1 = self.ellData[i].coord
         c2 = self.ellData[i + 1].coord
@@ -360,7 +360,6 @@ class EllipticalBox(inkex.Effect):
                 outset = thickness
             startA = ell1.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell1.angleFromDist(lidEndAngle, bodyNotches[n + 1])
-            #draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (-endA, -startA))
             draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
             cfa1 = ell1.coordinatesFromAngle(endA)
             c1 = elCenter + cfa1
