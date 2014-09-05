@@ -348,27 +348,26 @@ class EllipticalBox(inkex.Effect):
         # elliptical sides
         elCenter = Coordinate(docWidth / 2, 2 * D + H / 2)
 
-        ell1 = Ellipse(W, H)
-        #ell2 = Ellipse(W + 2 * thickness, H + 2 * thickness)
+        ell = Ellipse(W, H)
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
         lidStartAngle = pi / 2 - lidAngleRad / 2
         lidEndAngle = pi / 2 + lidAngleRad / 2
 
-        lidLength = ell1.distFromAngles(lidStartAngle, lidEndAngle)
-        bodyLength = ell1.distFromAngles(lidEndAngle, lidStartAngle)
-        inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell1.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
+        lidLength = ell.distFromAngles(lidStartAngle, lidEndAngle)
+        bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
+        inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
         lidNotches = _makeCurvedSurface(Coordinate(0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
         a1 = lidEndAngle
 
         for n in range(len(bodyNotches) - 1):
-            startA = ell1.angleFromDist(lidEndAngle, bodyNotches[n])
-            endA = ell1.angleFromDist(lidEndAngle, bodyNotches[n + 1])
-            c1 = elCenter + ell1.coordinateFromAngle(endA)
-            c2 = ell1.notchData(endA, thickness)
+            startA = ell.angleFromDist(lidEndAngle, bodyNotches[n])
+            endA = ell.angleFromDist(lidEndAngle, bodyNotches[n + 1])
+            c1 = elCenter + ell.coordinateFromAngle(endA)
+            c2 = ell.notchData(endA, thickness)
             a2 = atan2((W/2 + thickness) * c2.y, (H/2 + thickness) * c2.x)
 
             c2 += elCenter
