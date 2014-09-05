@@ -147,6 +147,7 @@ def _makeCurvedSurface(center, (w, h), cutDist, hCutCount, thickness, parent):
 
 class Ellipse():
     nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
+    # approximate circumfere: c = pi * (3 * (a + b) - sqrt(10 * a * b + 3 * (a ** 2 + b ** 2)))
 
     def __init__(self, w, h):
         self.h = h
@@ -161,7 +162,7 @@ class Ellipse():
             angle += self.angleStep
             prev = self.ellData[-1]
             x, y = w / 2 * cos(angle), h / 2 * sin(angle)
-            self.ellData.append(EllipsePoint(angle, Coordinate(x, y), prev.cDist + sqrt((prev.coord.x - x)**2 + (prev.coord.y - y)**2)))
+            self.ellData.append(EllipsePoint(angle, Coordinate(x, y), prev.cDist + hypot(prev.coord.x - x, prev.coord.y - y)))
         self.circumference = self.ellData[-1].cDist
         inkex.debug("circ: %d" % self.circumference)
 
@@ -180,7 +181,7 @@ class Ellipse():
 
     def notchData(self, angle, notchHeight):
         """Coordinate and angle for a notch at the given angle. The notch is perpendicular to the ellipse."""
-        angle = angle % (2 * pi)
+        angle %= (2 * pi)
         #some special cases to avoid divide by zero:
         if angle == 0:
             return (0, Coordinate(self.w / 2 + notchHeight, 0))
@@ -202,7 +203,7 @@ class Ellipse():
             nAngle += pi
 
         nCoordinate = self.coordinateFromAngle(angle) + Coordinate(cos(nAngle), sin(nAngle)) * notchHeight
-        return(nAngle, nCoordinate)
+        return nCoordinate
 
 
     def distFromAngles(self, a1, a2):
@@ -348,7 +349,7 @@ class EllipticalBox(inkex.Effect):
         elCenter = Coordinate(docWidth / 2, 2 * D + H / 2)
 
         ell1 = Ellipse(W, H)
-        ell2 = Ellipse(W + 2 * thickness, H + 2 * thickness)
+        #ell2 = Ellipse(W + 2 * thickness, H + 2 * thickness)
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
@@ -361,23 +362,23 @@ class EllipticalBox(inkex.Effect):
 
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
         lidNotches = _makeCurvedSurface(Coordinate(0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
+        a1 = lidEndAngle
 
         for n in range(len(bodyNotches) - 1):
-            if n % 2 == 0:
-                outset = 0
-            else:
-                outset = thickness
             startA = ell1.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell1.angleFromDist(lidEndAngle, bodyNotches[n + 1])
-            draw_SVG_ellipse((W / 2 + outset, H / 2 + outset), elCenter, layer, (startA, endA))
-            cfa1 = ell1.coordinateFromAngle(endA)
-            c1 = elCenter + cfa1
-            #c2 = elCenter + ell2.coordinateFromAngle(endA)
-            a2, c2 = ell1.notchData(endA, thickness)
+            c1 = elCenter + ell1.coordinateFromAngle(endA)
+            c2 = ell1.notchData(endA, thickness)
+            a2 = atan2((W/2 + thickness) * c2.y, (H/2 + thickness) * c2.x)
 
             c2 += elCenter
-            draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
+            if n % 2 == 0:
+                draw_SVG_ellipse((W / 2, H / 2), elCenter, layer, (startA, endA))
+            else:
+                draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
 
+            draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
+            a1 = a2
 # Create effect instance and apply it.
 effect = EllipticalBox()
 effect.affect()
