@@ -3,7 +3,7 @@ elliptical-box-maker
 
 Inkscape plug-in that generates drawings for an elliptical box which can be made using a laser cutter.
 
-This is a work in progress and not very useful at the moment.
+This is still a work in progress.
 
 Installation
 ------------
