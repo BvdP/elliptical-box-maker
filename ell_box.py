@@ -360,9 +360,9 @@ class EllipticalBox(inkex.Effect):
         inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D), (lidLength, D), cutDist, cutNr, thickness, layer)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutDist, cutNr, thickness, layer)
         a1 = lidEndAngle
-
+        # body notches
         for n in range(len(bodyNotches) - 1):
             startA = ell.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell.angleFromDist(lidEndAngle, bodyNotches[n + 1])
@@ -371,13 +371,30 @@ class EllipticalBox(inkex.Effect):
             a2 = atan2((W/2 + thickness) * c2.y, (H/2 + thickness) * c2.x)
 
             c2 += elCenter
-            if n % 2 == 0:
+            if n % 2 == 1:
                 draw_SVG_ellipse((W / 2, H / 2), elCenter, layer, (startA, endA))
             else:
                 draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
 
             draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
             a1 = a2
+        # lid notches
+        for n in range(len(lidNotches) - 1):
+            startA = ell.angleFromDist(lidStartAngle, lidNotches[n])
+            endA = ell.angleFromDist(lidStartAngle, lidNotches[n + 1])
+            c1 = elCenter + ell.coordinateFromAngle(endA)
+            c2 = ell.notchData(endA, thickness)
+            a2 = atan2((W/2 + thickness) * c2.y, (H/2 + thickness) * c2.x)
+
+            c2 += elCenter
+            if n % 2 == 1:
+                draw_SVG_ellipse((W / 2, H / 2), elCenter, layer, (startA, endA))
+            else:
+                draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
+
+            draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
+            a1 = a2
+
 # Create effect instance and apply it.
 effect = EllipticalBox()
 effect.affect()
