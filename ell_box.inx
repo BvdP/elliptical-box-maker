@@ -1,5 +1,5 @@
 <inkscape-extension>
-	<_name>Elliptical box</_name>
+	<_name>Elliptical Box Maker</_name>
 	<id>be.fablab-leuven.inkscape.elliptical_box</id>
 	<dependency type="executable" location="extensions">inkex.py</dependency>
 	<dependency type="executable" location="extensions">ell_box.py</dependency>
@@ -13,7 +13,7 @@
 	<effect>
 		<object-type>all</object-type>
 		<effects-menu>
-			<submenu _name="Mine" />
+			<submenu _name="Laser Tools" />
 		</effects-menu>
 	</effect>
 	<script>
