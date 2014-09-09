@@ -101,7 +101,9 @@ def draw_SVG_line(start, end, parent):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
-def _makeCurvedSurface(center, (w, h), cutSpacing, hCutCount, thickness, parent):
+def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent):
+    width = Coordinate(w, 0)
+    heigth = Coordinate(0, h)
     wCutCount = int(floor(w / cutSpacing))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
@@ -115,22 +117,22 @@ def _makeCurvedSurface(center, (w, h), cutSpacing, hCutCount, thickness, parent)
         else:
             inset = 0
 
-        x1 = (center.x + i * wCutDist)
+        x1 = (topLeft.x + i * wCutDist)
         notchEdges.append(x1)
-        draw_SVG_line(Coordinate(x1, center.y + inset), Coordinate(x1 + wCutDist, center.y + inset), parent)
-        draw_SVG_line(Coordinate(x1, center.y + h - inset), Coordinate(x1 + wCutDist, center.y + h - inset), parent)
+        draw_SVG_line(Coordinate(x1, topLeft.y + inset), Coordinate(x1 + wCutDist, topLeft.y + inset), parent)
+        draw_SVG_line(Coordinate(x1, topLeft.y + h - inset), Coordinate(x1 + wCutDist, topLeft.y + h - inset), parent)
 
         if i > 0:
-            draw_SVG_line(Coordinate(x1, center.y), Coordinate(x1, center.y + cutLength / 2), parent)
-            draw_SVG_line(Coordinate(x1, center.y + h), Coordinate(x1, center.y + h - cutLength / 2), parent)
+            draw_SVG_line(Coordinate(x1, topLeft.y), Coordinate(x1, topLeft.y + cutLength / 2), parent)
+            draw_SVG_line(Coordinate(x1, topLeft.y + h), Coordinate(x1, topLeft.y + h - cutLength / 2), parent)
 
             for j in range(hCutCount - 1):
-                y = center.y + cutLength / 2 + cutSpacing + j * (cutLength + cutSpacing)
+                y = topLeft.y + cutLength / 2 + cutSpacing + j * (cutLength + cutSpacing)
                 draw_SVG_line(Coordinate(x1, y), Coordinate(x1, y + cutLength), parent)
 
-        x2 = (center.x + i * wCutDist + wCutDist / 2)
+        x2 = (topLeft.x + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
-            y = center.y + cutSpacing / 2 + j * (cutLength + cutSpacing)
+            y = topLeft.y + cutSpacing / 2 + j * (cutLength + cutSpacing)
             cl = cutLength
             if j == 0:  # first row
                 y += inset
@@ -140,8 +142,8 @@ def _makeCurvedSurface(center, (w, h), cutSpacing, hCutCount, thickness, parent)
 
             draw_SVG_line(Coordinate(x2, y), Coordinate(x2, y + cl), parent)
 
-    draw_SVG_line(center, Coordinate(center.x, center.y + h), parent)
-    draw_SVG_line(Coordinate(center.x + w, center.y), Coordinate(center.x + w, center.y + h), parent)
+    draw_SVG_line(topLeft, topLeft + heigth, parent)
+    draw_SVG_line(topLeft + width, topLeft + width + heigth, parent)
     notchEdges.append(w)
     return notchEdges
 
