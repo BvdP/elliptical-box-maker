@@ -94,9 +94,9 @@ def SVG_curve(parent, segments, style, closed=True):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), attributes)
 
 #draw an SVG line segment between the given (raw) points
-def draw_SVG_line( (x1, y1), (x2, y2), parent):
+def draw_SVG_line(start, end, parent):
     line_attribs = {'style': objStyle,
-                    'd': 'M '+str(x1)+','+str(y1)+' L '+str(x2)+','+str(y2)}
+                    'd': 'M '+str(start.x)+','+str(start.y)+' L '+str(end.x)+','+str(end.y)}
 
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
@@ -117,16 +117,16 @@ def _makeCurvedSurface(center, (w, h), cutSpacing, hCutCount, thickness, parent)
 
         x1 = (center.x + i * wCutDist)
         notchEdges.append(x1)
-        draw_SVG_line((x1, center.y + inset), (x1 + wCutDist, center.y + inset), parent)
-        draw_SVG_line((x1, center.y + h - inset), (x1 + wCutDist, center.y + h - inset), parent)
+        draw_SVG_line(Coordinate(x1, center.y + inset), Coordinate(x1 + wCutDist, center.y + inset), parent)
+        draw_SVG_line(Coordinate(x1, center.y + h - inset), Coordinate(x1 + wCutDist, center.y + h - inset), parent)
 
         if i > 0:
-            draw_SVG_line((x1, center.y), (x1, center.y + cutLength / 2), parent)
-            draw_SVG_line((x1, center.y + h), (x1, center.y + h - cutLength / 2), parent)
+            draw_SVG_line(Coordinate(x1, center.y), Coordinate(x1, center.y + cutLength / 2), parent)
+            draw_SVG_line(Coordinate(x1, center.y + h), Coordinate(x1, center.y + h - cutLength / 2), parent)
 
             for j in range(hCutCount - 1):
                 y = center.y + cutLength / 2 + cutSpacing + j * (cutLength + cutSpacing)
-                draw_SVG_line((x1, y), (x1, y + cutLength), parent)
+                draw_SVG_line(Coordinate(x1, y), Coordinate(x1, y + cutLength), parent)
 
         x2 = (center.x + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
@@ -138,10 +138,10 @@ def _makeCurvedSurface(center, (w, h), cutSpacing, hCutCount, thickness, parent)
             elif j == hCutCount - 1:  # last row
                 cl -= inset
 
-            draw_SVG_line((x2, y), (x2, y + cl), parent)
+            draw_SVG_line(Coordinate(x2, y), Coordinate(x2, y + cl), parent)
 
-    draw_SVG_line((center.x, center.y), (center.x, center.y + h), parent)
-    draw_SVG_line((center.x + w, center.y), (center.x + w, center.y + h), parent)
+    draw_SVG_line(center, Coordinate(center.x, center.y + h), parent)
+    draw_SVG_line(Coordinate(center.x + w, center.y), Coordinate(center.x + w, center.y + h), parent)
     notchEdges.append(w)
     return notchEdges
 
@@ -376,7 +376,7 @@ class EllipticalBox(inkex.Effect):
             else:
                 draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
 
-            draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
+            draw_SVG_line(c1, c2, layer)
             a1 = a2
         # lid notches
         for n in range(len(lidNotches) - 1):
@@ -392,7 +392,7 @@ class EllipticalBox(inkex.Effect):
             else:
                 draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
 
-            draw_SVG_line((c1.x, c1.y), (c2.x, c2.y), layer)
+            draw_SVG_line(c1, c2, layer)
             a1 = a2
 
 # Create effect instance and apply it.
