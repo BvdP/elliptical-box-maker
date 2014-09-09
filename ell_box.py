@@ -101,12 +101,12 @@ def draw_SVG_line( (x1, y1), (x2, y2), parent):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
-def _makeCurvedSurface(center, (w, h), cutDist, hCutCount, thickness, parent):
-    wCutCount = int(floor(w / cutDist))
+def _makeCurvedSurface(center, (w, h), cutSpacing, hCutCount, thickness, parent):
+    wCutCount = int(floor(w / cutSpacing))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
     wCutDist = w / wCutCount
-    cutLength = h / hCutCount - cutDist
+    cutLength = h / hCutCount - cutSpacing
     notchEdges = [0]
 
     for i in range(wCutCount):
@@ -125,12 +125,12 @@ def _makeCurvedSurface(center, (w, h), cutDist, hCutCount, thickness, parent):
             draw_SVG_line((x1, center.y + h), (x1, center.y + h - cutLength / 2), parent)
 
             for j in range(hCutCount - 1):
-                y = center.y + cutLength / 2 + cutDist + j * (cutLength + cutDist)
+                y = center.y + cutLength / 2 + cutSpacing + j * (cutLength + cutSpacing)
                 draw_SVG_line((x1, y), (x1, y + cutLength), parent)
 
         x2 = (center.x + i * wCutDist + wCutDist / 2)
         for j in range(hCutCount):
-            y = center.y + cutDist / 2 + j * (cutLength + cutDist)
+            y = center.y + cutSpacing / 2 + j * (cutLength + cutSpacing)
             cl = cutLength
             if j == 0:  # first row
                 y += inset
@@ -322,7 +322,7 @@ class EllipticalBox(inkex.Effect):
         W = inkex.unittouu(str(self.options.width) + unit)
         D = inkex.unittouu(str(self.options.depth) + unit)
         thickness = inkex.unittouu(str(self.options.thickness) + unit)
-        cutDist = inkex.unittouu(str(self.options.cut_dist) + unit)
+        cutSpacing = inkex.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
 
         # input sanity check
@@ -359,8 +359,8 @@ class EllipticalBox(inkex.Effect):
         bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
         inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
-        bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutDist, cutNr, thickness, layer)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutDist, cutNr, thickness, layer)
+        bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutSpacing, cutNr, thickness, layer)
         a1 = lidEndAngle
         # body notches
         for n in range(len(bodyNotches) - 1):
