@@ -107,40 +107,46 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
     wCutCount = int(floor(w / cutSpacing))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
-    wCutDist = w / wCutCount
+    xCutDist = w / wCutCount
+    xSpacing = Coordinate(xCutDist, 0)
+    ySpacing = Coordinate(0, cutSpacing)
     cutLength = h / hCutCount - cutSpacing
+    cut = Coordinate(0, cutLength)
     notchEdges = [0]
 
-    for i in range(wCutCount):
-        if i % 2 == 1:  # make a notch here
-            inset = thickness
+    for cutIndex in range(wCutCount):
+        if cutIndex % 2 == 1:  # make a notch here
+            inset = Coordinate(0, thickness)
         else:
-            inset = 0
+            inset = Coordinate(0, 0)
 
-        x1 = (topLeft.x + i * wCutDist)
-        notchEdges.append(x1)
-        draw_SVG_line(Coordinate(x1, topLeft.y + inset), Coordinate(x1 + wCutDist, topLeft.y + inset), parent)
-        draw_SVG_line(Coordinate(x1, topLeft.y + h - inset), Coordinate(x1 + wCutDist, topLeft.y + h - inset), parent)
+        aColStart = topLeft + xSpacing * cutIndex
+        notchEdges.append(aColStart.x)
 
-        if i > 0:
-            draw_SVG_line(Coordinate(x1, topLeft.y), Coordinate(x1, topLeft.y + cutLength / 2), parent)
-            draw_SVG_line(Coordinate(x1, topLeft.y + h), Coordinate(x1, topLeft.y + h - cutLength / 2), parent)
+        if cutIndex > 0: # no cuts at x == 0
+            draw_SVG_line(aColStart, aColStart + cut / 2, parent)
 
             for j in range(hCutCount - 1):
-                y = topLeft.y + cutLength / 2 + cutSpacing + j * (cutLength + cutSpacing)
-                draw_SVG_line(Coordinate(x1, y), Coordinate(x1, y + cutLength), parent)
+                pos = aColStart + cut / 2 + ySpacing + (cut + ySpacing) * j
+                draw_SVG_line(pos, pos + cut, parent)
 
-        x2 = (topLeft.x + i * wCutDist + wCutDist / 2)
+            draw_SVG_line(aColStart + heigth - cut / 2, aColStart + heigth, parent)
+
+        # these cuts run in the opposite direction
+        bColStart = topLeft + xSpacing * cutIndex + xSpacing / 2
         for j in range(hCutCount):
-            y = topLeft.y + cutSpacing / 2 + j * (cutLength + cutSpacing)
-            cl = cutLength
-            if j == 0:  # first row
-                y += inset
-                cl -= inset
-            elif j == hCutCount - 1:  # last row
-                cl -= inset
 
-            draw_SVG_line(Coordinate(x2, y), Coordinate(x2, y + cl), parent)
+            end = bColStart + ySpacing / 2 + (cut + ySpacing) * j
+            start = end + cut
+            if j == 0:  # first row
+                end += inset
+            elif j == hCutCount - 1:  # last row
+                start -= inset
+            draw_SVG_line(start, end, parent)
+
+        #horizontal cuts (should be done last)
+        draw_SVG_line(aColStart + inset, aColStart + inset + xSpacing, parent)
+        draw_SVG_line(aColStart + heigth - inset, aColStart + heigth - inset + xSpacing, parent)
 
     draw_SVG_line(topLeft, topLeft + heigth, parent)
     draw_SVG_line(topLeft + width, topLeft + width + heigth, parent)
