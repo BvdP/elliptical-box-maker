@@ -125,17 +125,14 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
 
         if cutIndex > 0: # no cuts at x == 0
             draw_SVG_line(aColStart, aColStart + cut / 2, parent)
-
             for j in range(hCutCount - 1):
                 pos = aColStart + cut / 2 + ySpacing + (cut + ySpacing) * j
                 draw_SVG_line(pos, pos + cut, parent)
-
             draw_SVG_line(aColStart + heigth - cut / 2, aColStart + heigth, parent)
 
         # these cuts run in the opposite direction
         bColStart = topLeft + xSpacing * cutIndex + xSpacing / 2
-        for j in range(hCutCount):
-
+        for j in reversed(range(hCutCount)):
             end = bColStart + ySpacing / 2 + (cut + ySpacing) * j
             start = end + cut
             if j == 0:  # first row
