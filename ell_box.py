@@ -82,7 +82,6 @@ def SVG_arc_to(rx, ry, x, y):
 def SVG_path(components):
     return '<path d="' + ' '.join(components) + '">'
 
-
 def SVG_curve(parent, segments, style, closed=True):
     #pathStr = 'M '+ segments[0]
     pathStr = ' '.join(segments)
@@ -102,6 +101,7 @@ def draw_SVG_line(start, end, parent):
 
 
 def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent):
+    group = inkex.etree.SubElement(parent, 'g')
     width = Coordinate(w, 0)
     heigth = Coordinate(0, h)
     wCutCount = int(floor(w / cutSpacing))
@@ -124,11 +124,11 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
         notchEdges.append(aColStart.x)
 
         if cutIndex > 0: # no cuts at x == 0
-            draw_SVG_line(aColStart, aColStart + cut / 2, parent)
+            draw_SVG_line(aColStart, aColStart + cut / 2, group)
             for j in range(hCutCount - 1):
                 pos = aColStart + cut / 2 + ySpacing + (cut + ySpacing) * j
-                draw_SVG_line(pos, pos + cut, parent)
-            draw_SVG_line(aColStart + heigth - cut / 2, aColStart + heigth, parent)
+                draw_SVG_line(pos, pos + cut, group)
+            draw_SVG_line(aColStart + heigth - cut / 2, aColStart + heigth, group)
 
         # these cuts run in the opposite direction
         bColStart = topLeft + xSpacing * cutIndex + xSpacing / 2
@@ -139,14 +139,14 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
                 end += inset
             elif j == hCutCount - 1:  # last row
                 start -= inset
-            draw_SVG_line(start, end, parent)
+            draw_SVG_line(start, end, group)
 
         #horizontal cuts (should be done last)
-        draw_SVG_line(aColStart + inset, aColStart + inset + xSpacing, parent)
-        draw_SVG_line(aColStart + heigth - inset, aColStart + heigth - inset + xSpacing, parent)
+        draw_SVG_line(aColStart + inset, aColStart + inset + xSpacing, group)
+        draw_SVG_line(aColStart + heigth - inset, aColStart + heigth - inset + xSpacing, group)
 
-    draw_SVG_line(topLeft, topLeft + heigth, parent)
-    draw_SVG_line(topLeft + width, topLeft + width + heigth, parent)
+    draw_SVG_line(topLeft, topLeft + heigth, group)
+    draw_SVG_line(topLeft + width, topLeft + width + heigth, group)
     notchEdges.append(w)
     return notchEdges
 
@@ -367,7 +367,9 @@ class EllipticalBox(inkex.Effect):
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer)
         lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutSpacing, cutNr, thickness, layer)
         a1 = lidEndAngle
-        # body notches
+
+        # create elliptical sides
+        group = inkex.etree.SubElement(layer, 'g')
         for n in range(len(bodyNotches) - 1):
             startA = ell.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell.angleFromDist(lidEndAngle, bodyNotches[n + 1])
@@ -377,11 +379,11 @@ class EllipticalBox(inkex.Effect):
 
             c2 += elCenter
             if n % 2 == 1:
-                draw_SVG_ellipse((W / 2, H / 2), elCenter, layer, (startA, endA))
+                draw_SVG_ellipse((W / 2, H / 2), elCenter, group, (startA, endA))
             else:
-                draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
+                draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, group, (a1, a2))
 
-            draw_SVG_line(c1, c2, layer)
+            draw_SVG_line(c1, c2, group)
             a1 = a2
         # lid notches
         for n in range(len(lidNotches) - 1):
@@ -393,11 +395,11 @@ class EllipticalBox(inkex.Effect):
 
             c2 += elCenter
             if n % 2 == 1:
-                draw_SVG_ellipse((W / 2, H / 2), elCenter, layer, (startA, endA))
+                draw_SVG_ellipse((W / 2, H / 2), elCenter, group, (startA, endA))
             else:
-                draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, layer, (a1, a2))
+                draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, group, (a1, a2))
 
-            draw_SVG_line(c1, c2, layer)
+            draw_SVG_line(c1, c2, group)
             a1 = a2
 
 # Create effect instance and apply it.
