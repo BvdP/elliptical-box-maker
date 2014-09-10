@@ -3,12 +3,14 @@
 # We will use the inkex module with the predefined Effect base class.
 import inkex
 # The simplestyle module provides functions for style parsing.
-#from simplestyle import *
+
 import simplestyle
 from math import *
 from collections import namedtuple
-import traceback
 
+#Note: keep in mind that SVG coordinates start in the top-left corner i.e. with an inverted y-axis
+
+# first define some SVG primitives (we do not use them all so a cleanup may be in order)
 objStyle = simplestyle.formatStyle(
     {'stroke': '#000000',
     'stroke-width': '0.1',
@@ -106,7 +108,7 @@ def draw_SVG_line(start, end, parent, style = objStyle):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
-def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent, invertNotches = False):
+def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent, invertNotches = False, centralRib = False):
     group = inkex.etree.SubElement(parent, 'g')
     width = Coordinate(w, 0)
     heigth = Coordinate(0, h)
@@ -116,8 +118,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
     xCutDist = w / wCutCount
     xSpacing = Coordinate(xCutDist, 0)
     ySpacing = Coordinate(0, cutSpacing)
-    cutLength = h / hCutCount - cutSpacing
-    cut = Coordinate(0, cutLength)
+    cut = heigth / hCutCount - ySpacing
     notchEdges = [0]
     topHCuts = []
     bottomHCuts = []
@@ -128,6 +129,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
         else:
             inset = Coordinate(0, 0)
 
+        # A-column of cuts
         aColStart = topLeft + xSpacing * cutIndex
         notchEdges.append(aColStart.x)
 
@@ -138,7 +140,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
                 draw_SVG_line(pos, pos + cut, group)
             draw_SVG_line(aColStart + heigth - cut / 2, aColStart + heigth, group)
 
-        # these cuts run in the opposite direction
+        # B-column of cuts, offset by half the cut length; these cuts run in the opposite direction
         bColStart = topLeft + xSpacing * cutIndex + xSpacing / 2
         for j in reversed(range(hCutCount)):
             end = bColStart + ySpacing / 2 + (cut + ySpacing) * j
@@ -153,13 +155,14 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
         topHCuts.append((aColStart + inset, aColStart + inset + xSpacing))
         bottomHCuts.append((aColStart + heigth - inset, aColStart + heigth - inset + xSpacing))
 
+    # draw the outline
+    for c in reversed(bottomHCuts):
+        draw_SVG_line(c[1], c[0], group)
+    draw_SVG_line(topLeft + heigth, topLeft, group)
     for c in topHCuts:
         draw_SVG_line(c[0], c[1], group)
-    for c in bottomHCuts:
-        draw_SVG_line(c[0], c[1], group)
-
-    draw_SVG_line(topLeft, topLeft + heigth, group)
     draw_SVG_line(topLeft + width, topLeft + width + heigth, group)
+
     notchEdges.append(w)
     return notchEdges
 
@@ -332,6 +335,9 @@ class EllipticalBox(inkex.Effect):
           type = 'inkbool', dest = 'invert_lid_notches', default = 'false',
           help = 'Invert the notch pattern on the lid (to prevent sideways motion)')
 
+        self.OptionParser.add_option('-r', '--central_rib', action = 'store',
+          type = 'inkbool', dest = 'centralRib', default = 'false',
+          help = 'Create a central rib')
 
     def effect(self):
         """
@@ -388,6 +394,10 @@ class EllipticalBox(inkex.Effect):
         # create elliptical sides
         # body
         group = inkex.etree.SubElement(layer, 'g')
+
+        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), group, greenStyle)
+        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), group, greenStyle)
+
         for n in range(1, len(bodyNotches) - 1):
             startA = ell.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell.angleFromDist(lidEndAngle, bodyNotches[n + 1])
@@ -422,8 +432,6 @@ class EllipticalBox(inkex.Effect):
 
             a1 = a2
 
-        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), group, greenStyle)
-        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), group, greenStyle)
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
