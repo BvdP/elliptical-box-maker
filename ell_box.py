@@ -15,6 +15,12 @@ objStyle = simplestyle.formatStyle(
     'fill': 'none'
     })
 
+greenStyle = simplestyle.formatStyle(
+    {'stroke': '#00ff00',
+    'stroke-width': '0.1',
+    'fill': 'none'
+    })
+
 def draw_SVG_square((w,h), (x,y), parent):
     attribs = {
         'style': objStyle,
@@ -93,14 +99,14 @@ def SVG_curve(parent, segments, style, closed=True):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), attributes)
 
 #draw an SVG line segment between the given (raw) points
-def draw_SVG_line(start, end, parent):
-    line_attribs = {'style': objStyle,
+def draw_SVG_line(start, end, parent, style = objStyle):
+    line_attribs = {'style': style,
                     'd': 'M '+str(start.x)+','+str(start.y)+' L '+str(end.x)+','+str(end.y)}
 
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
-def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent):
+def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent, invertNotches = False):
     group = inkex.etree.SubElement(parent, 'g')
     width = Coordinate(w, 0)
     heigth = Coordinate(0, h)
@@ -115,7 +121,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
     notchEdges = [0]
 
     for cutIndex in range(wCutCount):
-        if cutIndex % 2 == 1:  # make a notch here
+        if (cutIndex % 2 == 1) != invertNotches:  # make a notch here
             inset = Coordinate(0, thickness)
         else:
             inset = Coordinate(0, 0)
@@ -315,6 +321,10 @@ class EllipticalBox(inkex.Effect):
           type = 'int', dest = 'lid_ribcount', default = '0',
           help = 'Number of ribs in the lid')
 
+        self.OptionParser.add_option('-n', '--invert_lid_notches', action = 'store',
+          type = 'inkbool', dest = 'invert_lid_notches', default = 'false',
+          help = 'Invert the notch pattern on the lid (to prevent sideways motion)')
+
 
     def effect(self):
         """
@@ -365,7 +375,7 @@ class EllipticalBox(inkex.Effect):
         inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutSpacing, cutNr, thickness, layer)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutSpacing, cutNr, thickness, layer, self.options.invert_lid_notches)
         a1 = lidEndAngle
 
         # create elliptical sides
@@ -396,7 +406,7 @@ class EllipticalBox(inkex.Effect):
             a2 = atan2((W/2 + thickness) * c2.y, (H/2 + thickness) * c2.x)
 
             c2 += elCenter
-            if n % 2 == 1:
+            if (n % 2 == 1) != self.options.invert_lid_notches:
                 draw_SVG_ellipse((W / 2, H / 2), elCenter, group, (startA, endA))
                 draw_SVG_line(c1, c2, group)
             else:
@@ -404,6 +414,9 @@ class EllipticalBox(inkex.Effect):
                 draw_SVG_line(c2, c1, group)
 
             a1 = a2
+
+        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), group, greenStyle)
+        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), group, greenStyle)
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
