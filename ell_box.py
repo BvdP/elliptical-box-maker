@@ -119,6 +119,8 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
     cutLength = h / hCutCount - cutSpacing
     cut = Coordinate(0, cutLength)
     notchEdges = [0]
+    topHCuts = []
+    bottomHCuts = []
 
     for cutIndex in range(wCutCount):
         if (cutIndex % 2 == 1) != invertNotches:  # make a notch here
@@ -148,8 +150,13 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
             draw_SVG_line(start, end, group)
 
         #horizontal cuts (should be done last)
-        draw_SVG_line(aColStart + inset, aColStart + inset + xSpacing, group)
-        draw_SVG_line(aColStart + heigth - inset, aColStart + heigth - inset + xSpacing, group)
+        topHCuts.append((aColStart + inset, aColStart + inset + xSpacing))
+        bottomHCuts.append((aColStart + heigth - inset, aColStart + heigth - inset + xSpacing))
+
+    for c in topHCuts:
+        draw_SVG_line(c[0], c[1], group)
+    for c in bottomHCuts:
+        draw_SVG_line(c[0], c[1], group)
 
     draw_SVG_line(topLeft, topLeft + heigth, group)
     draw_SVG_line(topLeft + width, topLeft + width + heigth, group)
