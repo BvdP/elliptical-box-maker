@@ -369,8 +369,9 @@ class EllipticalBox(inkex.Effect):
         a1 = lidEndAngle
 
         # create elliptical sides
+        # body
         group = inkex.etree.SubElement(layer, 'g')
-        for n in range(len(bodyNotches) - 1):
+        for n in range(1, len(bodyNotches) - 1):
             startA = ell.angleFromDist(lidEndAngle, bodyNotches[n])
             endA = ell.angleFromDist(lidEndAngle, bodyNotches[n + 1])
             c1 = elCenter + ell.coordinateFromAngle(endA)
@@ -380,13 +381,14 @@ class EllipticalBox(inkex.Effect):
             c2 += elCenter
             if n % 2 == 1:
                 draw_SVG_ellipse((W / 2, H / 2), elCenter, group, (startA, endA))
+                draw_SVG_line(c1, c2, group)
             else:
                 draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, group, (a1, a2))
+                draw_SVG_line(c2, c1, group)
 
-            draw_SVG_line(c1, c2, group)
             a1 = a2
-        # lid notches
-        for n in range(len(lidNotches) - 1):
+        # lid
+        for n in range(1, len(lidNotches) - 1):
             startA = ell.angleFromDist(lidStartAngle, lidNotches[n])
             endA = ell.angleFromDist(lidStartAngle, lidNotches[n + 1])
             c1 = elCenter + ell.coordinateFromAngle(endA)
@@ -396,10 +398,11 @@ class EllipticalBox(inkex.Effect):
             c2 += elCenter
             if n % 2 == 1:
                 draw_SVG_ellipse((W / 2, H / 2), elCenter, group, (startA, endA))
+                draw_SVG_line(c1, c2, group)
             else:
                 draw_SVG_ellipse((W / 2 + thickness, H / 2 + thickness), elCenter, group, (a1, a2))
+                draw_SVG_line(c2, c1, group)
 
-            draw_SVG_line(c1, c2, group)
             a1 = a2
 
 # Create effect instance and apply it.
