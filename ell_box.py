@@ -145,6 +145,15 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
         for j in reversed(range(hCutCount)):
             end = bColStart + ySpacing / 2 + (cut + ySpacing) * j
             start = end + cut
+            if centralRib and hCutCount % 2 == 0 and cutIndex % 2 == 1:
+                holeTopLeft = end - ySpacing - xSpacing / 2
+                if j == hCutCount // 2 - 1:
+                    start -= ySpacing / 2
+                elif j == hCutCount // 2:
+                    end += ySpacing / 2
+
+                    draw_SVG_line(holeTopLeft, holeTopLeft + xSpacing, group)
+                    draw_SVG_line(holeTopLeft + ySpacing, holeTopLeft + ySpacing + xSpacing, group)
             if j == 0:  # first row
                 end += inset
             elif j == hCutCount - 1:  # last row
@@ -185,7 +194,7 @@ class Ellipse():
             x, y = w / 2 * cos(angle), h / 2 * sin(angle)
             self.ellData.append(EllipsePoint(angle, Coordinate(x, y), prev.cDist + hypot(prev.coord.x - x, prev.coord.y - y)))
         self.circumference = self.ellData[-1].cDist
-        inkex.debug("circ: %d" % self.circumference)
+        #inkex.debug("circ: %d" % self.circumference)
 
     def rAngle(self, a):
         """Convert an angle measured from ellipse center to the angle used to generate ellData (used for lookups)"""
@@ -362,6 +371,11 @@ class EllipticalBox(inkex.Effect):
         if cutNr < 1:
             inkex.errormsg(_('Error: Number of cuts should be at least 1'))
             error = True
+
+        if self.options.centralRib and cutNr % 2 == 1:
+            inkex.errormsg(_('Error: Central rib is only valid with an even number of cuts'))
+            error = True
+
         if error:
             exit()
 
@@ -385,10 +399,10 @@ class EllipticalBox(inkex.Effect):
 
         lidLength = ell.distFromAngles(lidStartAngle, lidEndAngle)
         bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
-        inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
+        #inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutSpacing, cutNr, thickness, layer, self.options.invert_lid_notches)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D+1), (lidLength, D), cutSpacing, cutNr, thickness, layer, self.options.invert_lid_notches, self.options.centralRib)
         a1 = lidEndAngle
 
         # create elliptical sides
