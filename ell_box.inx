@@ -11,7 +11,8 @@
 	<param name="cut_nr" type="int" min="1" max="100" _gui-text="Number of cuts">3</param>
 	<param name="lid_angle" type="float" min="0.0" max="360.0" _gui-text="Lid angle">120</param>
 	<param name="invert_lid_notches" type="boolean" _gui-text="Invert lid notches">false</param>
-	<param name="central_rib" type="boolean" _gui-text="Create central rib (only if you have an even number of cuts)">false</param>
+	<param name="central_rib_lid" type="boolean" _gui-text="Create central rib in the lid(requires an even number of cuts)">false</param>
+	<param name="central_rib_body" type="boolean" _gui-text="Create central rib in the body(requires an even number of cuts)">false</param>
 	<effect>
 		<object-type>all</object-type>
 		<effects-menu>

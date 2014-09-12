@@ -64,13 +64,13 @@ def draw_SVG_arc((rx, ry), x_axis_rot):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), drw)
     inkex.addNS('', 'svg')
 
-def draw_SVG_text((cx, cy), txt, parent):
+def draw_SVG_text(coordinate, txt, parent):
     text = inkex.etree.Element(inkex.addNS('text', 'svg'))
     text.text = txt
-    text.set('x', str(cx))
-    text.set('y', str(cy))
+    text.set('x', str(coordinate.x))
+    text.set('y', str(coordinate.y))
     style = {'text-align': 'center', 'text-anchor': 'middle'}
-    text.set('style', formatStyle(style))
+    text.set('style', simplestyle.formatStyle(style))
     parent.append(text)
 
 
@@ -365,10 +365,13 @@ class EllipticalBox(inkex.Effect):
           type = 'inkbool', dest = 'invert_lid_notches', default = 'false',
           help = 'Invert the notch pattern on the lid (to prevent sideways motion)')
 
-        self.OptionParser.add_option('-r', '--central_rib', action = 'store',
-          type = 'inkbool', dest = 'centralRib', default = 'false',
-          help = 'Create a central rib')
+        self.OptionParser.add_option('-r', '--central_rib_lid', action = 'store',
+          type = 'inkbool', dest = 'centralRibLid', default = 'false',
+          help = 'Create a central rib in the lid')
 
+        self.OptionParser.add_option('-R', '--central_rib_body', action = 'store',
+          type = 'inkbool', dest = 'centralRibBody', default = 'false',
+          help = 'Create a central rib in the body')
     def effect(self):
         """
         Draws as basic elliptical box, based on provided parameters
@@ -393,7 +396,7 @@ class EllipticalBox(inkex.Effect):
             inkex.errormsg(_('Error: Number of cuts should be at least 1'))
             error = True
 
-        if self.options.centralRib and cutNr % 2 == 1:
+        if (self.options.centralRibLid or self.options.centralRibBody) and cutNr % 2 == 1:
             inkex.errormsg(_('Error: Central rib is only valid with an even number of cuts'))
             error = True
 
@@ -408,8 +411,6 @@ class EllipticalBox(inkex.Effect):
         layer.set(inkex.addNS('label', 'inkscape'), 'Elliptical Box')
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
-        # elliptical sides
-
         ell = Ellipse(W, H)
 
         #body and lid
@@ -421,8 +422,8 @@ class EllipticalBox(inkex.Effect):
         bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
         #inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
-        bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D + 2), (lidLength, D), cutSpacing, cutNr, thickness, layer, self.options.invert_lid_notches, self.options.centralRib)
+        bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D + 2), (lidLength, D), cutSpacing, cutNr, thickness, layer, self.options.invert_lid_notches, self.options.centralRibLid)
         a1 = lidEndAngle
 
         # create elliptical sides
@@ -431,6 +432,7 @@ class EllipticalBox(inkex.Effect):
         elCenter = Coordinate(2 + thickness + W / 2, 2 * D + H / 2 + thickness + 4)
 
         # indicate the division between body and lid
+        # TODO: shift one notch towards the center when inverted lid notches is selected
         draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), sidesGrp, greenStyle)
         draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), sidesGrp, greenStyle)
 
@@ -438,25 +440,26 @@ class EllipticalBox(inkex.Effect):
         _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, self.options.invert_lid_notches)
 
         # ribs
-        if self.options.centralRib:
-            innerRibCenter = Coordinate(2 + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 6)
-            innerRibGrp = inkex.etree.SubElement(layer, 'g')
-            # indicate the division between body and lid
-            draw_SVG_line(innerRibCenter, innerRibCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), innerRibGrp, greenStyle)
-            draw_SVG_line(innerRibCenter, innerRibCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), innerRibGrp, greenStyle)
+        spacer = Coordinate(0, 10)
+        innerRibCenter = Coordinate(2 + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 6)
+        innerRibGrp = inkex.etree.SubElement(layer, 'g')
 
+        outerRibCenter = Coordinate(40 + 1.5 * (W + thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 6)
+        outerRibGrp = inkex.etree.SubElement(layer, 'g')
+
+
+        if self.options.centralRibLid:
+
+            _makeNotchedEllipse(innerRibCenter + spacer, ell, lidStartAngle, thickness, lidNotches, innerRibGrp, False)
+            _makeNotchedEllipse(outerRibCenter + spacer, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
+
+        if self.options.centralRibBody:
             _makeNotchedEllipse(innerRibCenter, ell, lidEndAngle, thickness, bodyNotches, innerRibGrp, False)
-            _makeNotchedEllipse(innerRibCenter, ell, lidStartAngle, thickness, lidNotches, innerRibGrp, False)
-
-            outerRibCenter = Coordinate(40 + 1.5 * (W + thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 6)
-            outerRibGrp = inkex.etree.SubElement(layer, 'g')
-            # indicate the division between body and lid
-            draw_SVG_line(outerRibCenter, outerRibCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), outerRibGrp, greenStyle)
-            draw_SVG_line(outerRibCenter, outerRibCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), outerRibGrp, greenStyle)
-
             _makeNotchedEllipse(outerRibCenter, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
-            _makeNotchedEllipse(outerRibCenter, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
 
+        if self.options.centralRibLid or self.options.centralRibBody:
+            draw_SVG_text(innerRibCenter, 'inside rib', innerRibGrp)
+            draw_SVG_text(outerRibCenter, 'outside rib', outerRibGrp)
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
