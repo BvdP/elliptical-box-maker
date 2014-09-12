@@ -147,14 +147,13 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
             end = bColStart + ySpacing / 2 + (cut + ySpacing) * j
             start = end + cut
             if centralRib and hCutCount % 2 == 0 and cutIndex % 2 == 1:
-                holeTopLeft = end - ySpacing - xSpacing / 2
+                holeTopLeft = start + (ySpacing - plateThickness - xSpacing) / 2
                 if j == hCutCount // 2 - 1:
-                    start -= ySpacing / 2
-                elif j == hCutCount // 2:
-                    end += ySpacing / 2
-                    # fixme: these are drawn one vertical cut too soon
+                    start -= plateThickness / 2
+                    draw_SVG_line(holeTopLeft + plateThickness + xSpacing, holeTopLeft + plateThickness, group)
                     draw_SVG_line(holeTopLeft, holeTopLeft + xSpacing, group)
-                    draw_SVG_line(holeTopLeft + ySpacing, holeTopLeft + ySpacing + xSpacing, group)
+                elif j == hCutCount // 2:
+                    end += plateThickness / 2
             if j == 0:  # first row
                 end += inset
             elif j == hCutCount - 1:  # last row
