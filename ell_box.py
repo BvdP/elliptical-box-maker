@@ -176,6 +176,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
     return notchEdges
 
 def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent, invertNotches):
+    startAngle += pi # rotate 180 degrees to put the lid on the topside
     c2 = ellipse.notchCoordinate(ellipse.rAngle(startAngle), thickness)
     a1 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
     for n in range(1, len(notches) - 1):
@@ -433,8 +434,8 @@ class EllipticalBox(inkex.Effect):
 
         # indicate the division between body and lid
         # TODO: shift one notch towards the center when inverted lid notches is selected
-        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle)), sidesGrp, greenStyle)
-        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle)), sidesGrp, greenStyle)
+        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle + pi)), sidesGrp, greenStyle)
+        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle + pi)), sidesGrp, greenStyle)
 
         _makeNotchedEllipse(elCenter, ell, lidEndAngle, thickness, bodyNotches, sidesGrp, False)
         _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, self.options.invert_lid_notches)
@@ -450,14 +451,15 @@ class EllipticalBox(inkex.Effect):
 
         if self.options.centralRibLid:
 
-            _makeNotchedEllipse(innerRibCenter + spacer, ell, lidStartAngle, thickness, lidNotches, innerRibGrp, False)
-            _makeNotchedEllipse(outerRibCenter + spacer, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
+            _makeNotchedEllipse(innerRibCenter, ell, lidStartAngle, thickness, lidNotches, innerRibGrp, False)
+            _makeNotchedEllipse(outerRibCenter, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
 
         if self.options.centralRibBody:
-            _makeNotchedEllipse(innerRibCenter, ell, lidEndAngle, thickness, bodyNotches, innerRibGrp, False)
-            _makeNotchedEllipse(outerRibCenter, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
+            _makeNotchedEllipse(innerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, innerRibGrp, False)
+            _makeNotchedEllipse(outerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
 
         if self.options.centralRibLid or self.options.centralRibBody:
+            draw_SVG_text(elCenter, 'side (duplicate this)', innerRibGrp)
             draw_SVG_text(innerRibCenter, 'inside rib', innerRibGrp)
             draw_SVG_text(outerRibCenter, 'outside rib', outerRibGrp)
 
