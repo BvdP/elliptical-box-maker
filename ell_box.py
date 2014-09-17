@@ -326,6 +326,10 @@ class EllipticalBox(inkex.Effect):
     def __init__(self):
         inkex.Effect.__init__(self)
 
+        self.OptionParser.add_option('-u', '--unit', action = 'store',
+          type = 'string', dest = 'unit', default = 'mm',
+          help = 'Unit')
+
         self.OptionParser.add_option('-t', '--thickness', action = 'store',
           type = 'float', dest = 'thickness', default = '3.0',
           help = 'Material thickness')
@@ -378,31 +382,36 @@ class EllipticalBox(inkex.Effect):
         Draws as basic elliptical box, based on provided parameters
         """
 
+        # input sanity check
+        error = False
+        if min(self.options.heigth, self.options.width, self.options.depth) == 0:
+            inkex.errormsg(_('Error: Dimensions must be non zero'))
+            error = True
+
+        if self.options.cut_nr < 1:
+            inkex.errormsg(_('Error: Number of cuts should be at least 1'))
+            error = True
+
+        if (self.options.centralRibLid or self.options.centralRibBody) and self.options.cut_nr % 2 == 1:
+            inkex.errormsg(_('Error: Central rib is only valid with an even number of cuts'))
+            error = True
+
+        if self.options.unit not in ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']:
+            inkex.errormsg(_('Error: unknown unit. '+ self.options.unit))
+            error = True
+
+        if error:
+            exit()
+
+
         # convert units
-        unit = 'mm'
+        unit = self.options.unit
         H = inkex.unittouu(str(self.options.heigth) + unit)
         W = inkex.unittouu(str(self.options.width) + unit)
         D = inkex.unittouu(str(self.options.depth) + unit)
         thickness = inkex.unittouu(str(self.options.thickness) + unit)
         cutSpacing = inkex.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
-
-        # input sanity check
-        error = False
-        if min(H, W, D) == 0:
-            inkex.errormsg(_('Error: Dimensions must be non zero'))
-            error = True
-
-        if cutNr < 1:
-            inkex.errormsg(_('Error: Number of cuts should be at least 1'))
-            error = True
-
-        if (self.options.centralRibLid or self.options.centralRibBody) and cutNr % 2 == 1:
-            inkex.errormsg(_('Error: Central rib is only valid with an even number of cuts'))
-            error = True
-
-        if error:
-            exit()
 
         svg = self.document.getroot()
         docWidth = inkex.unittouu(svg.get('width'))

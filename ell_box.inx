@@ -3,6 +3,18 @@
 	<id>be.fablab-leuven.inkscape.elliptical_box</id>
 	<dependency type="executable" location="extensions">inkex.py</dependency>
 	<dependency type="executable" location="extensions">ell_box.py</dependency>
+	<param name="unit" type="enum" _gui-text="Unit">
+		<_item value="mm">mm</_item>
+		<_item value="cm">cm</_item>
+		<_item value="m">m</_item>
+		<_item value="km">km</_item>
+		<_item value="in">in</_item>
+		<_item value="ft">ft</_item>
+		<_item value="yd">yd</_item>
+		<_item value="pt">pt</_item>
+		<_item value="px">px</_item>
+		<_item value="pc">pc</_item>
+	</param>
 	<param name="thickness" type="float" min="1.0" max="100.0" _gui-text="Material thickness">3.0</param>
 	<param name="heigth" type="float" min="0.0" max="10000.0" _gui-text="Heigth">10.0</param>
 	<param name="width" type="float" min="0.0" max="10000.0" _gui-text="Width">10.0</param>
