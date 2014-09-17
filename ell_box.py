@@ -111,14 +111,14 @@ def draw_SVG_line(start, end, parent, style = objStyle):
 def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent, invertNotches = False, centralRib = False):
     group = inkex.etree.SubElement(parent, 'g')
     width = Coordinate(w, 0)
-    heigth = Coordinate(0, h)
+    height = Coordinate(0, h)
     wCutCount = int(floor(w / cutSpacing))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
     xCutDist = w / wCutCount
     xSpacing = Coordinate(xCutDist, 0)
     ySpacing = Coordinate(0, cutSpacing)
-    cut = heigth / hCutCount - ySpacing
+    cut = height / hCutCount - ySpacing
     plateThickness = Coordinate(0, thickness)
     notchEdges = [0]
     topHCuts = []
@@ -139,7 +139,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
             for j in range(hCutCount - 1):
                 pos = aColStart + cut / 2 + ySpacing + (cut + ySpacing) * j
                 draw_SVG_line(pos, pos + cut, group)
-            draw_SVG_line(aColStart + heigth - cut / 2, aColStart + heigth, group)
+            draw_SVG_line(aColStart + height - cut / 2, aColStart + height, group)
 
         # B-column of cuts, offset by half the cut length; these cuts run in the opposite direction
         bColStart = topLeft + xSpacing * cutIndex + xSpacing / 2
@@ -162,15 +162,15 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
 
         #horizontal cuts (should be done last)
         topHCuts.append((aColStart + inset, aColStart + inset + xSpacing))
-        bottomHCuts.append((aColStart + heigth - inset, aColStart + heigth - inset + xSpacing))
+        bottomHCuts.append((aColStart + height - inset, aColStart + height - inset + xSpacing))
 
     # draw the outline
     for c in reversed(bottomHCuts):
         draw_SVG_line(c[1], c[0], group)
-    draw_SVG_line(topLeft + heigth, topLeft, group)
+    draw_SVG_line(topLeft + height, topLeft, group)
     for c in topHCuts:
         draw_SVG_line(c[0], c[1], group)
-    draw_SVG_line(topLeft + width, topLeft + width + heigth, group)
+    draw_SVG_line(topLeft + width, topLeft + width + height, group)
 
     notchEdges.append(w)
     return notchEdges
@@ -325,10 +325,11 @@ class EllipticalBox(inkex.Effect):
     """
     def __init__(self):
         inkex.Effect.__init__(self)
+        self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
 
         self.OptionParser.add_option('-u', '--unit', action = 'store',
           type = 'string', dest = 'unit', default = 'mm',
-          help = 'Unit')
+          help = 'Unit, should be one of ')
 
         self.OptionParser.add_option('-t', '--thickness', action = 'store',
           type = 'float', dest = 'thickness', default = '3.0',
@@ -338,9 +339,9 @@ class EllipticalBox(inkex.Effect):
           type = 'float', dest = 'width', default = '3.0',
           help = 'Box width')
 
-        self.OptionParser.add_option('-z', '--heigth', action = 'store',
-          type = 'float', dest = 'heigth', default = '10.0',
-          help = 'Box heigth')
+        self.OptionParser.add_option('-z', '--height', action = 'store',
+          type = 'float', dest = 'height', default = '10.0',
+          help = 'Box height')
 
         self.OptionParser.add_option('-y', '--depth', action = 'store',
           type = 'float', dest = 'depth', default = '3.0',
@@ -384,7 +385,7 @@ class EllipticalBox(inkex.Effect):
 
         # input sanity check
         error = False
-        if min(self.options.heigth, self.options.width, self.options.depth) == 0:
+        if min(self.options.height, self.options.width, self.options.depth) == 0:
             inkex.errormsg(_('Error: Dimensions must be non zero'))
             error = True
 
@@ -396,7 +397,7 @@ class EllipticalBox(inkex.Effect):
             inkex.errormsg(_('Error: Central rib is only valid with an even number of cuts'))
             error = True
 
-        if self.options.unit not in ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']:
+        if self.options.unit not in self.knownUnits:
             inkex.errormsg(_('Error: unknown unit. '+ self.options.unit))
             error = True
 
@@ -406,7 +407,7 @@ class EllipticalBox(inkex.Effect):
 
         # convert units
         unit = self.options.unit
-        H = inkex.unittouu(str(self.options.heigth) + unit)
+        H = inkex.unittouu(str(self.options.height) + unit)
         W = inkex.unittouu(str(self.options.width) + unit)
         D = inkex.unittouu(str(self.options.depth) + unit)
         thickness = inkex.unittouu(str(self.options.thickness) + unit)
@@ -415,7 +416,7 @@ class EllipticalBox(inkex.Effect):
 
         svg = self.document.getroot()
         docWidth = inkex.unittouu(svg.get('width'))
-        docHeigth = inkex.unittouu(svg.attrib['height'])
+        docHeight = inkex.unittouu(svg.attrib['height'])
 
         layer = inkex.etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Elliptical Box')
@@ -468,7 +469,7 @@ class EllipticalBox(inkex.Effect):
             _makeNotchedEllipse(outerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
 
         if self.options.centralRibLid or self.options.centralRibBody:
-            draw_SVG_text(elCenter, 'side (duplicate this)', innerRibGrp)
+            draw_SVG_text(elCenter, 'side (duplicate this)', sidesGrp)
             draw_SVG_text(innerRibCenter, 'inside rib', innerRibGrp)
             draw_SVG_text(outerRibCenter, 'outside rib', outerRibGrp)
 
