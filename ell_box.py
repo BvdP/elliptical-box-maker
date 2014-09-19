@@ -434,7 +434,7 @@ class EllipticalBox(inkex.Effect):
         #inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
 
         bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D + 2), (lidLength, D), cutSpacing, cutNr, thickness, layer, self.options.invert_lid_notches, self.options.centralRibLid)
+        lidNotches = _makeCurvedSurface(Coordinate(0, D + 2), (lidLength, D), cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
         a1 = lidEndAngle
 
         # create elliptical sides
@@ -443,12 +443,18 @@ class EllipticalBox(inkex.Effect):
         elCenter = Coordinate(2 + thickness + W / 2, 2 * D + H / 2 + thickness + 4)
 
         # indicate the division between body and lid
-        # TODO: shift one notch towards the center when inverted lid notches is selected
-        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle + pi)), sidesGrp, greenStyle)
-        draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle + pi)), sidesGrp, greenStyle)
+        if self.options.invert_lid_notches:
+            draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle + pi)), sidesGrp, greenStyle)
+            draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle + pi)), sidesGrp, greenStyle)
+        else:
+            angleA = ell.angleFromDist(lidStartAngle, lidNotches[2])
+            angleB = ell.angleFromDist(lidStartAngle, lidNotches[-2])
+
+            draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(angleA + pi), sidesGrp, greenStyle)
+            draw_SVG_line(elCenter, elCenter + ell.coordinateFromAngle(angleB + pi), sidesGrp, greenStyle)
 
         _makeNotchedEllipse(elCenter, ell, lidEndAngle, thickness, bodyNotches, sidesGrp, False)
-        _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, self.options.invert_lid_notches)
+        _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, not self.options.invert_lid_notches)
 
         # ribs
         spacer = Coordinate(0, 10)
