@@ -386,19 +386,19 @@ class EllipticalBox(inkex.Effect):
         # input sanity check
         error = False
         if min(self.options.height, self.options.width, self.options.depth) == 0:
-            inkex.errormsg(_('Error: Dimensions must be non zero'))
+            inkex.errormsg('Error: Dimensions must be non zero')
             error = True
 
         if self.options.cut_nr < 1:
-            inkex.errormsg(_('Error: Number of cuts should be at least 1'))
+            inkex.errormsg('Error: Number of cuts should be at least 1')
             error = True
 
         if (self.options.centralRibLid or self.options.centralRibBody) and self.options.cut_nr % 2 == 1:
-            inkex.errormsg(_('Error: Central rib is only valid with an even number of cuts'))
+            inkex.errormsg('Error: Central rib is only valid with an even number of cuts')
             error = True
 
         if self.options.unit not in self.knownUnits:
-            inkex.errormsg(_('Error: unknown unit. '+ self.options.unit))
+            inkex.errormsg('Error: unknown unit. '+ self.options.unit)
             error = True
 
         if error:
@@ -416,7 +416,7 @@ class EllipticalBox(inkex.Effect):
 
         svg = self.document.getroot()
         docWidth = inkex.unittouu(svg.get('width'))
-        docHeight = inkex.unittouu(svg.attrib['height'])
+        docHeigh = inkex.unittouu(svg.attrib['height'])
 
         layer = inkex.etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Elliptical Box')
