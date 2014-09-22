@@ -13,13 +13,13 @@ from collections import namedtuple
 # first define some SVG primitives (we do not use them all so a cleanup may be in order)
 objStyle = simplestyle.formatStyle(
     {'stroke': '#000000',
-    'stroke-width': '0.1',
+    'stroke-width': inkex.unittouu('0.1mm'),
     'fill': 'none'
     })
 
 greenStyle = simplestyle.formatStyle(
     {'stroke': '#00ff00',
-    'stroke-width': '0.1',
+    'stroke-width': inkex.unittouu('0.1mm'),
     'fill': 'none'
     })
 
@@ -431,16 +431,18 @@ class EllipticalBox(inkex.Effect):
 
         lidLength = ell.distFromAngles(lidStartAngle, lidEndAngle)
         bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
-        #inkex.debug('lid start: %f, end: %f, calc. end:%f'% (lidStartAngle*360/2/pi, lidEndAngle*360/2/pi, ell.angleFromDist(lidStartAngle, lidLength)*360/2/pi))
-
-        bodyNotches = _makeCurvedSurface(Coordinate(0, 0), (bodyLength, D), cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
-        lidNotches = _makeCurvedSurface(Coordinate(0, D + 2), (lidLength, D), cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
+        
+        # do not put elements right at the edge of the page
+        xMargin = 3
+        yMargin = 3
+        bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), (bodyLength, D), cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
+        lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), (lidLength, D), cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
         a1 = lidEndAngle
 
         # create elliptical sides
         sidesGrp = inkex.etree.SubElement(layer, 'g')
 
-        elCenter = Coordinate(2 + thickness + W / 2, 2 * D + H / 2 + thickness + 4)
+        elCenter = Coordinate(xMargin + thickness + W / 2, 2 * D + H / 2 + thickness + 3 * yMargin)
 
         # indicate the division between body and lid
         if self.options.invert_lid_notches:
@@ -458,10 +460,10 @@ class EllipticalBox(inkex.Effect):
 
         # ribs
         spacer = Coordinate(0, 10)
-        innerRibCenter = Coordinate(2 + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 6)
+        innerRibCenter = Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
         innerRibGrp = inkex.etree.SubElement(layer, 'g')
 
-        outerRibCenter = Coordinate(40 + 1.5 * (W + thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 6)
+        outerRibCenter = Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
         outerRibGrp = inkex.etree.SubElement(layer, 'g')
 
 
