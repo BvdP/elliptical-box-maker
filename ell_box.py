@@ -132,7 +132,7 @@ def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent
 
         # A-column of cuts
         aColStart = topLeft + xSpacing * cutIndex
-        notchEdges.append(aColStart.x)
+        notchEdges.append((aColStart - topLeft).x)
 
         if cutIndex > 0: # no cuts at x == 0
             draw_SVG_line(aColStart, aColStart + cut / 2, group)
