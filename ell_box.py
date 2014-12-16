@@ -108,7 +108,7 @@ def draw_SVG_line(start, end, parent, style = objStyle):
     inkex.etree.SubElement(parent, inkex.addNS('path', 'svg'), line_attribs)
 
 
-def _makeCurvedSurface(topLeft, (w, h), cutSpacing, hCutCount, thickness, parent, invertNotches = False, centralRib = False):
+def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, invertNotches = False, centralRib = False):
     group = inkex.etree.SubElement(parent, 'g')
     width = Coordinate(w, 0)
     height = Coordinate(0, h)
@@ -351,6 +351,10 @@ class EllipticalBox(inkex.Effect):
           type = 'float', dest = 'cut_dist', default = '1.5',
           help = 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.')
 
+        self.OptionParser.add_option('--auto_cut_dist', action = 'store',
+          type = 'inkbool', dest = 'auto_cut_dist', default = 'false',
+          help = 'Automatically set the cut distance based on the curvature.')
+
         self.OptionParser.add_option('-c', '--cut_nr', action = 'store',
           type = 'int', dest = 'cut_nr', default = '3',
           help = 'Number of cuts across the depth of the box.')
@@ -431,12 +435,12 @@ class EllipticalBox(inkex.Effect):
 
         lidLength = ell.distFromAngles(lidStartAngle, lidEndAngle)
         bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
-        
+
         # do not put elements right at the edge of the page
         xMargin = 3
         yMargin = 3
-        bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), (bodyLength, D), cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
-        lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), (lidLength, D), cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
+        bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), bodyLength, D, cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
+        lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
         a1 = lidEndAngle
 
         # create elliptical sides
