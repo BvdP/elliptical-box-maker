@@ -13,13 +13,13 @@ from collections import namedtuple
 # first define some SVG primitives (we do not use them all so a cleanup may be in order)
 objStyle = simplestyle.formatStyle(
     {'stroke': '#000000',
-    'stroke-width': inkex.unittouu('0.1mm'),
+    'stroke-width': 0.28,
     'fill': 'none'
     })
 
 greenStyle = simplestyle.formatStyle(
     {'stroke': '#00ff00',
-    'stroke-width': inkex.unittouu('0.1mm'),
+    'stroke-width': 0.28,
     'fill': 'none'
     })
 
@@ -382,6 +382,16 @@ class EllipticalBox(inkex.Effect):
         self.OptionParser.add_option('-R', '--central_rib_body', action = 'store',
           type = 'inkbool', dest = 'centralRibBody', default = 'false',
           help = 'Create a central rib in the body')
+
+    try:
+        inkex.Effect.unittouu   # unitouu has moved since Inkscape 0.91
+    except AttributeError:
+        try:
+            def unittouu(self, unit):
+                return inkex.unittouu(unit)
+        except AttributeError:
+            pass
+
     def effect(self):
         """
         Draws as basic elliptical box, based on provided parameters
@@ -411,16 +421,16 @@ class EllipticalBox(inkex.Effect):
 
         # convert units
         unit = self.options.unit
-        H = inkex.unittouu(str(self.options.height) + unit)
-        W = inkex.unittouu(str(self.options.width) + unit)
-        D = inkex.unittouu(str(self.options.depth) + unit)
-        thickness = inkex.unittouu(str(self.options.thickness) + unit)
-        cutSpacing = inkex.unittouu(str(self.options.cut_dist) + unit)
+        H = self.unittouu(str(self.options.height) + unit)
+        W = self.unittouu(str(self.options.width) + unit)
+        D = self.unittouu(str(self.options.depth) + unit)
+        thickness = self.unittouu(str(self.options.thickness) + unit)
+        cutSpacing = self.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
 
         svg = self.document.getroot()
-        docWidth = inkex.unittouu(svg.get('width'))
-        docHeigh = inkex.unittouu(svg.attrib['height'])
+        docWidth = self.unittouu(svg.get('width'))
+        docHeigh = self.unittouu(svg.attrib['height'])
 
         layer = inkex.etree.SubElement(svg, 'g')
         layer.set(inkex.addNS('label', 'inkscape'), 'Elliptical Box')
