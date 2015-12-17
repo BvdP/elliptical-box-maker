@@ -209,64 +209,23 @@ class EllipticalBox(doc.Effect):
     Creates a new layer with the drawings for a parametrically generaded box.
     """
     def __init__(self):
-        doc.Effect.__init__(self)
-        self.knownUnits = ['in', 'pt', 'px', 'mm', 'cm', 'm', 'km', 'pc', 'yd', 'ft']
+        options = [
+            ['unit', 'string', 'mm', 'Unit, one of: cm, mm, in, ft, ...'],
+            ['thickness', 'float', '3.0', 'Material thickness'],
+            ['width', 'float', '100', 'Box width'],
+            ['height', 'float', '100', 'Box height'],
+            ['depth', 'float', '100', 'Box depth'],
+            ['cut_dist', 'float', '1.5', 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.'],
+            ['auto_cut_dist', 'inkbool', 'false', 'Automatically set the cut distance based on the curvature.'], # in progress
+            ['cut_nr', 'int', '3', 'Number of cuts across the depth of the box.'],
+            ['lid_angle', 'float', '120', 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)'],
+            ['body_ribcount', 'int', '0', 'Number of ribs in the body'],
+            ['lid_ribcount', 'int', '0', 'Number of ribs in the lid'],
+            ['invert_lid_notches', 'inkbool', 'false', 'Invert the notch pattern on the lid (keeps the lid from sliding sideways)'],
+            ['central_rib_lid', 'inkbool', 'false', 'Create a central rib in the lid'],
+            ['central_rib_body', 'inkbool', 'false', 'Create a central rib in the body']
+        ]
 
-        self.OptionParser.add_option('-u', '--unit', action = 'store',
-          type = 'string', dest = 'unit', default = 'mm',
-          help = 'Unit, should be one of ')
-
-        self.OptionParser.add_option('-t', '--thickness', action = 'store',
-          type = 'float', dest = 'thickness', default = '3.0',
-          help = 'Material thickness')
-
-        self.OptionParser.add_option('-x', '--width', action = 'store',
-          type = 'float', dest = 'width', default = '3.0',
-          help = 'Box width')
-
-        self.OptionParser.add_option('-z', '--height', action = 'store',
-          type = 'float', dest = 'height', default = '10.0',
-          help = 'Box height')
-
-        self.OptionParser.add_option('-y', '--depth', action = 'store',
-          type = 'float', dest = 'depth', default = '3.0',
-          help = 'Box depth')
-
-        self.OptionParser.add_option('-d', '--cut_dist', action = 'store',
-          type = 'float', dest = 'cut_dist', default = '1.5',
-          help = 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.')
-
-        self.OptionParser.add_option('--auto_cut_dist', action = 'store',
-          type = 'inkbool', dest = 'auto_cut_dist', default = 'false',
-          help = 'Automatically set the cut distance based on the curvature.')
-
-        self.OptionParser.add_option('-c', '--cut_nr', action = 'store',
-          type = 'int', dest = 'cut_nr', default = '3',
-          help = 'Number of cuts across the depth of the box.')
-
-        self.OptionParser.add_option('-a', '--lid_angle', action = 'store',
-          type = 'float', dest = 'lid_angle', default = '120',
-          help = 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)')
-
-        self.OptionParser.add_option('-b', '--body_ribcount', action = 'store',
-          type = 'int', dest = 'body_ribcount', default = '0',
-          help = 'Number of ribs in the body')
-
-        self.OptionParser.add_option('-l', '--lid_ribcount', action = 'store',
-          type = 'int', dest = 'lid_ribcount', default = '0',
-          help = 'Number of ribs in the lid')
-
-        self.OptionParser.add_option('-n', '--invert_lid_notches', action = 'store',
-          type = 'inkbool', dest = 'invert_lid_notches', default = 'false',
-          help = 'Invert the notch pattern on the lid (to prevent sideways motion)')
-
-        self.OptionParser.add_option('-r', '--central_rib_lid', action = 'store',
-          type = 'inkbool', dest = 'centralRibLid', default = 'false',
-          help = 'Create a central rib in the lid')
-
-        self.OptionParser.add_option('-R', '--central_rib_body', action = 'store',
-          type = 'inkbool', dest = 'centralRibBody', default = 'false',
-          help = 'Create a central rib in the body')
 
     def effect(self):
         """
