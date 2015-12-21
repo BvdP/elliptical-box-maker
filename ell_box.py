@@ -100,108 +100,6 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
 
         a1 = a2
 
-class Ellipse():
-    nrPoints = 1000 #used for piecewise linear circumference calculation (ellipse circumference is tricky to calculate)
-    # approximate circumfere: c = pi * (3 * (a + b) - sqrt(10 * a * b + 3 * (a ** 2 + b ** 2)))
-
-    def __init__(self, w, h):
-        self.h = h
-        self.w = w
-        EllipsePoint = namedtuple('EllipsePoint', 'angle coord cDist')
-        self.ellData = [EllipsePoint(0, doc.Coordinate(w/2, 0), 0)] # (angle, x, y, cumulative distance from angle = 0)
-        angle = 0
-        self.angleStep = 2 * pi / self.nrPoints
-        #note: the render angle (ra) corresponds to the angle from the ellipse center (ca) according to:
-        # ca = atan(w/h * tan(ra))
-        for i in range(self.nrPoints):
-            angle += self.angleStep
-            prev = self.ellData[-1]
-            x, y = w / 2 * cos(angle), h / 2 * sin(angle)
-            self.ellData.append(EllipsePoint(angle, doc.Coordinate(x, y), prev.cDist + hypot(prev.coord.x - x, prev.coord.y - y)))
-        self.circumference = self.ellData[-1].cDist
-        #inkex.debug("circ: %d" % self.circumference)
-
-    def rAngle(self, a):
-        """Convert an angle measured from ellipse center to the angle used to generate ellData (used for lookups)"""
-        cf = 0
-        if a > pi / 2:
-            cf = pi
-        if a > 3 * pi / 2:
-            cf = 2 * pi
-        return atan(self.w / self.h * tan(a)) + cf
-
-    def coordinateFromAngle(self, angle):
-        """Coordinate of the point at angle."""
-        return doc.Coordinate(self.w / 2 * cos(angle), self.h / 2 * sin(angle))
-
-    def notchCoordinate(self, angle, notchHeight):
-        """Coordinate for a notch at the given angle. The notch is perpendicular to the ellipse."""
-        angle %= (2 * pi)
-        #some special cases to avoid divide by zero:
-        if angle == 0:
-            return (0, doc.Coordinate(self.w / 2 + notchHeight, 0))
-        elif angle == pi:
-            return (pi, doc.Coordinate(-self.w / 2 - notchHeight, 0))
-        elif angle == pi / 2:
-            return(pi / 2, doc.Coordinate(0, self.h / 2 + notchHeight))
-        elif angle == 3 * pi / 2:
-            return(3 * pi / 2, doc.Coordinate(0, -self.h / 2 - notchHeight))
-
-        x = self.w / 2 * cos(angle)
-        derivative = self.h / self.w * -x / sqrt((self.w / 2) ** 2 - x ** 2)
-        if angle > pi:
-            derivative = -derivative
-
-        normal = -1 / derivative
-        nAngle = atan(normal)
-        if angle > pi / 2 and angle < 3 * pi / 2:
-            nAngle += pi
-
-        nCoordinate = self.coordinateFromAngle(angle) + doc.Coordinate(cos(nAngle), sin(nAngle)) * notchHeight
-        return nCoordinate
-
-
-    def distFromAngles(self, a1, a2):
-        """Distance accross the surface from point at angle a2 to point at angle a2. Measured in CCW sense."""
-        i1 = int(self.rAngle(a1) / self.angleStep)
-        p1 = self.rAngle(a1) % self.angleStep
-        l1 = self.ellData[i1 + 1].cDist - self.ellData[i1].cDist
-        i2 = int(self.rAngle(a2) / self.angleStep)
-        p2 = self.rAngle(a2) % self.angleStep
-        l2 = self.ellData[i2 + 1].cDist - self.ellData[i2].cDist
-        if a1 <= a2:
-            len = self.ellData[i2].cDist - self.ellData[i1].cDist + l2 * p2 - l1 * p1
-        else:
-            len = self.circumference + self.ellData[i2].cDist - self.ellData[i1].cDist
-        return len
-
-    def angleFromDist(self, startAngle, relDist):
-        """Returns the angle that you get when starting at startAngle and moving a distance (dist) in CCW direction"""
-        si = int(self.rAngle(startAngle) / self.angleStep)
-        p = self.rAngle(startAngle) % self.angleStep
-
-        l = self.ellData[si + 1].cDist - self.ellData[si].cDist
-
-        startDist = self.ellData[si].cDist + p * l
-
-        absDist = relDist + startDist
-
-        if absDist > self.ellData[-1].cDist:  # wrap around zero angle
-            absDist -= self.ellData[-1].cDist
-
-        iMin = 0
-        iMax = self.nrPoints
-        count = 0
-        while iMax - iMin > 1:  # binary search
-            count += 1
-            iHalf = iMin + (iMax - iMin) // 2
-            if self.ellData[iHalf].cDist < absDist:
-                iMin = iHalf
-            else:
-                iMax = iHalf
-
-        stepDist = self.ellData[iMax].cDist - self.ellData[iMin].cDist
-        return self.ellData[iMin].angle + self.angleStep * (absDist - self.ellData[iMin].cDist)/stepDist
 
 
 class EllipticalBox(doc.Effect):
@@ -269,7 +167,7 @@ class EllipticalBox(doc.Effect):
 
         layer = doc.layer(svg, 'Elliptical Box')
 
-        ell = Ellipse(W, H)
+        ell = doc.Ellipse(W, H)
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
