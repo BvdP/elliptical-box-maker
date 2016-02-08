@@ -16,7 +16,8 @@ With a little bit of effort it is also possible to make something a bit more ori
 It's probably a good idea to use the [latest release](https://github.com/BvdP/elliptical-box-maker/releases) in stead of downloading the latest commit. 
 The latest commit is probably work in progress and may not be a very good user experience.
 
-You need to download the source code and copy `ell_box.py` and `ell_box.inx` to your Inkscape extensions directory (see below). 
+You need to download the source code and copy `ell_box.py` and `ell_box.inx` to your Inkscape extensions directory (see below). You also need another extension https://github.com/BvdP/Inkscape_helper . Put the two files in a folder called "Inkscape_helper" (note the capital I) and put the folder into the extensions directory where you put the ell_box.pi and ell_box.inx files.
+
 The other files are part of this documentation that you are reading, there is no need to copy those.
 If you then start Inkscape the plugin should show up in the Extensions menu under Laser Tools --> Elliptical Box Maker.
 
@@ -33,4 +34,4 @@ In the following paragraphs "local install" means installing in your own inkscap
 
 #Usage
 
-For now check the [tutorial](http://www.instructables.com/id/Generating-elliptical-boxes-using-a-laser-cutter-a/) on Instuructables.
+For now check the [tutorial](http://www.instructables.com/id/Generating-elliptical-boxes-using-a-laser-cutter-a/) on Instructables.
