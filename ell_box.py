@@ -2,7 +2,6 @@
 
 import Inkscape_helper.inkscape_helper as doc
 from math import *
-from collections import namedtuple
 
 #Note: keep in mind that SVG coordinates start in the top-left corner i.e. with an inverted y-axis
 
