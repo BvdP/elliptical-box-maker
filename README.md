@@ -4,6 +4,7 @@ Inkscape plug-in that generates drawings for an elliptical box which can be made
 ##Overview
 
 This [Inkscape](https://inkscape.org/) plugin is intended to help you create laser cuttable designs.
+To give you an idea about what it can do. Here are some examples that were made using this plugin.
 ![Boxes](/images/boxes.jpeg)
 ![Simple box](/images/foobarbox.jpeg)
 
@@ -30,7 +31,7 @@ In the following paragraphs "local install" means installing in your own inkscap
 
 ###On Linux or Mac:
 * Local install: put both files in `~/.config/inkscape/extensions`
-*  System wide install: put them in `/usr/share/inkscape/extensions`
+* System wide install: put them in `/usr/share/inkscape/extensions`
 
 #Usage
 
