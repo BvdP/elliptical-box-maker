@@ -119,9 +119,10 @@ class EllipticalBox(doc.Effect):
             ['body_ribcount', 'int', '0', 'Number of ribs in the body'],
             ['lid_ribcount', 'int', '0', 'Number of ribs in the lid'],
             ['invert_lid_notches', 'inkbool', 'false', 'Invert the notch pattern on the lid (keeps the lid from sliding sideways)'],
-            ['central_rib_lid', 'inkbool', 'false', 'Create a central rib in the lid'],
-            ['central_rib_body', 'inkbool', 'false', 'Create a central rib in the body']
+            ['centralRibLid', 'inkbool', 'false', 'Create a central rib in the lid'],
+            ['centralRibBody', 'inkbool', 'false', 'Create a central rib in the body']
         ]
+        doc.Effect.__init__(self, options)
 
 
     def effect(self):
