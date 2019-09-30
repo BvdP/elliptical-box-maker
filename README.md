@@ -1,4 +1,4 @@
-#elliptical-box-maker
+# elliptical-box-maker
 
 Inkscape plug-in that generates drawings for an elliptical box which can be made using a laser cutter.
 ##Overview
@@ -13,7 +13,7 @@ With a little bit of effort it is also possible to make something a bit more ori
 ![Sea life](/images/fish n shark.jpeg)
 
 
-##Installation
+## Installation
 It's probably a good idea to use the [latest release](https://github.com/BvdP/elliptical-box-maker/releases) in stead of downloading the latest commit. 
 The latest commit is probably work in progress and may not be a very good user experience.
 
@@ -25,14 +25,14 @@ If you then start Inkscape the plugin should show up in the Extensions menu unde
 In the following paragraphs "local install" means installing in your own inkscape folders. You don't need special rights to do this but other users cannot use the plugin (unless they install it themselves).
 "System wide install" means that every user on the system can use the plugins but you need admin rights to install them.
 
-###On Windows:
+### On Windows:
 * Local install: put both files in `C:\Users\USERNAME\AppData\Roaming\inkscape\extensions` (where USERNAME is your username, i.e. the name you use when you log in)
 * System wide install: put the files in `C:\Program Files\Inkscape\share\extensions`
 
-###On Linux or Mac:
+### On Linux or Mac:
 * Local install: put both files in `~/.config/inkscape/extensions`
 * System wide install: put them in `/usr/share/inkscape/extensions`
 
-#Usage
+# Usage
 
 For now check the [tutorial](http://www.instructables.com/id/Generating-elliptical-boxes-using-a-laser-cutter-a/) on Instructables.
