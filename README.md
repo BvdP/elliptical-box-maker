@@ -10,7 +10,7 @@ To give you an idea about what it can do. Here are some examples that were made 
 
 With a little bit of effort it is also possible to make something a bit more original. For example:
 ![A dinosaur](/images/dinosaur.jpeg)
-![Sea life](/images/fish n shark.jpeg)
+![Sea life](/images/fish%20n%20shark.jpeg)
 
 
 ## Installation
