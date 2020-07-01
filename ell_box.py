@@ -122,6 +122,7 @@ class EllipticalBox(doc.Effect):
             ['central_rib_lid', 'inkbool', 'false', 'Create a central rib in the lid'],
             ['central_rib_body', 'inkbool', 'false', 'Create a central rib in the body']
         ]
+        eff.Effect.__init__(self, options)
 
 
     def effect(self):
@@ -139,7 +140,7 @@ class EllipticalBox(doc.Effect):
             inkex.errormsg('Error: Number of cuts should be at least 1')
             error = True
 
-        if (self.options.centralRibLid or self.options.centralRibBody) and self.options.cut_nr % 2 == 1:
+        if (self.options.central_rib_lid or self.options.central_rib_body) and self.options.cut_nr % 2 == 1:
             inkex.errormsg('Error: Central rib is only valid with an even number of cuts')
             error = True
 
