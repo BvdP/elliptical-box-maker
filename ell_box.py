@@ -1,27 +1,34 @@
 #!/usr/bin/env python
 
-import Inkscape_helper.inkscape_helper as doc
+#import Inkscape_helper.inkscape_helper as doc
+#import inkscape_helper as helper
+from inkscape_helper.Coordinate import Coordinate
+import inkscape_helper.Effect as eff
+import inkscape_helper.SVG as svg
+from inkscape_helper.Ellipse import Ellipse
+
+from inkscape_helper.Line import Line
+from inkscape_helper.EllipticArc import EllipticArc
+
 from math import *
 
 #Note: keep in mind that SVG coordinates start in the top-left corner i.e. with an inverted y-axis
 
-# first define some SVG primitives (we do not use them all so a cleanup may be in order)
-objStyle = doc.default_style
-greenStyle = doc.mark_style
-
+# first define some SVG primitives
+greenStyle = svg.green_style
 
 def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, invertNotches = False, centralRib = False):
-    group = doc.group(parent)
-    width = doc.Coordinate(w, 0)
-    height = doc.Coordinate(0, h)
+    group = svg.group(parent)
+    width = Coordinate(w, 0)
+    height = Coordinate(0, h)
     wCutCount = int(floor(w / cutSpacing))
     if wCutCount % 2 == 0:
         wCutCount += 1    # make sure we have an odd number of cuts
     xCutDist = w / wCutCount
-    xSpacing = doc.Coordinate(xCutDist, 0)
-    ySpacing = doc.Coordinate(0, cutSpacing)
+    xSpacing = Coordinate(xCutDist, 0)
+    ySpacing = Coordinate(0, cutSpacing)
     cut = height / hCutCount - ySpacing
-    plateThickness = doc.Coordinate(0, thickness)
+    plateThickness = Coordinate(0, thickness)
     notchEdges = [0]
     topHCuts = []
     bottomHCuts = []
@@ -30,7 +37,7 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
         if (cutIndex % 2 == 1) != invertNotches:  # make a notch here
             inset = plateThickness
         else:
-            inset = doc.Coordinate(0, 0)
+            inset = Coordinate(0, 0)
 
         # A-column of cuts
         aColStart = topLeft + xSpacing * cutIndex
@@ -101,7 +108,7 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
 
 
 
-class EllipticalBox(doc.Effect):
+class EllipticalBox(eff.Effect):
     """
     Creates a new layer with the drawings for a parametrically generaded box.
     """
@@ -161,33 +168,33 @@ class EllipticalBox(doc.Effect):
         cutSpacing = self.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
 
-        svg = self.document.getroot()
-        docWidth = self.unittouu(svg.get('width'))
-        docHeigh = self.unittouu(svg.attrib['height'])
+        doc_root = self.document.getroot()
+        docWidth = self.unittouu(doc_root.get('width'))
+        docHeigh = self.unittouu(doc_root.attrib['height'])
 
-        layer = doc.layer(svg, 'Elliptical Box')
+        layer = svg.layer(doc_root, 'Elliptical Box')
 
-        ell = doc.Ellipse(W, H)
+        ell = Ellipse(W, H)
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
         lidStartAngle = pi / 2 - lidAngleRad / 2
         lidEndAngle = pi / 2 + lidAngleRad / 2
 
-        lidLength = ell.distFromAngles(lidStartAngle, lidEndAngle)
-        bodyLength = ell.distFromAngles(lidEndAngle, lidStartAngle)
+        lidLength = ell.dist_from_theta(lidStartAngle, lidEndAngle)
+        bodyLength = ell.dist_from_theta(lidEndAngle, lidStartAngle)
 
         # do not put elements right at the edge of the page
         xMargin = 3
         yMargin = 3
-        bodyNotches = _makeCurvedSurface(doc.Coordinate(xMargin, yMargin), bodyLength, D, cutSpacing, cutNr, thickness, layer, False, self.options.centralRibBody)
-        lidNotches = _makeCurvedSurface(doc.Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
+        bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), bodyLength, D, cutSpacing, cutNr, thickness, layer, False, self.options.central_rib_body)
+        lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
         a1 = lidEndAngle
 
         # create elliptical sides
-        sidesGrp = doc.group(layer)
+        sidesGrp = svg.group(layer)
 
-        elCenter = doc.Coordinate(xMargin + thickness + W / 2, 2 * D + H / 2 + thickness + 3 * yMargin)
+        elCenter = Coordinate(xMargin + thickness + W / 2, 2 * D + H / 2 + thickness + 3 * yMargin)
 
         # indicate the division between body and lid
         if self.options.invert_lid_notches:
@@ -204,12 +211,12 @@ class EllipticalBox(doc.Effect):
         _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, not self.options.invert_lid_notches)
 
         # ribs
-        spacer = doc.Coordinate(0, 10)
-        innerRibCenter = doc.Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
-        innerRibGrp = doc.group(layer)
+        spacer = Coordinate(0, 10)
+        innerRibCenter = Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
+        innerRibGrp = svg.group(layer)
 
-        outerRibCenter = doc.Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
-        outerRibGrp = doc.group(layer)
+        outerRibCenter = Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
+        outerRibGrp = svg.group(layer)
 
 
         if self.options.centralRibLid:
