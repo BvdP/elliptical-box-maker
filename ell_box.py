@@ -114,6 +114,7 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
     thick_rad = Coordinate(thickness, thickness)
 
     p = svg.Path()
+    p.move_to(center, True)
 
     for n in range(1, len(notches) - 1):
         startA = ellipse.theta_from_dist(startAngle, notches[n])
@@ -260,7 +261,7 @@ class EllipticalBox(eff.Effect):
 
         p.path(sidesGrp, greenStyle)
 
-        # ribs
+        # ribs TODO: don't create groups if we don't use them (they still end up in the file)
         spacer = Coordinate(0, 10)
         innerRibCenter = Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
         innerRibGrp = svg.group(layer)
