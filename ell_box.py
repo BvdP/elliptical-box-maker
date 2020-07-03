@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-#import Inkscape_helper.inkscape_helper as doc
-#import inkscape_helper as helper
 from inkscape_helper.Coordinate import Coordinate
 import inkscape_helper.Effect as eff
 import inkscape_helper.SVG as svg
@@ -18,7 +16,6 @@ from math import *
 greenStyle = svg.green_style
 
 def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, invertNotches = False, centralRib = False):
-    group = svg.group(parent)
     width = Coordinate(w, 0)
     height = Coordinate(0, h)
     wCutCount = int(floor(w / cutSpacing))
@@ -33,6 +30,8 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
     topHCuts = []
     bottomHCuts = []
 
+    p = svg.Path()
+
     for cutIndex in range(wCutCount):
         if (cutIndex % 2 == 1) != invertNotches:  # make a notch here
             inset = plateThickness
@@ -44,11 +43,17 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
         notchEdges.append((aColStart - topLeft).x)
 
         if cutIndex > 0: # no cuts at x == 0
-            doc.draw_line(group, aColStart, aColStart + cut / 2)
+            p.move_to(aColStart, True)
+            p.line_to(cut / 2)
+
             for j in range(hCutCount - 1):
                 pos = aColStart + cut / 2 + ySpacing + (cut + ySpacing) * j
-                doc.draw_line(group, pos, pos + cut)
-            doc.draw_line(group, aColStart + height - cut / 2, aColStart + height)
+                p.move_to(pos, True)
+                p.line_to(cut)
+
+            p.move_to(aColStart + height - cut / 2, True)
+            p.line_to(cut / 2)
+
 
         # B-column of cuts, offset by half the cut length; these cuts run in the opposite direction
         bColStart = topLeft + xSpacing * cutIndex + xSpacing / 2
@@ -59,15 +64,20 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
                 holeTopLeft = start + (ySpacing - plateThickness - xSpacing) / 2
                 if j == hCutCount // 2 - 1:
                     start -= plateThickness / 2
-                    doc.draw_line(group, holeTopLeft + plateThickness + xSpacing, holeTopLeft + plateThickness)
-                    doc.draw_line(group, holeTopLeft, holeTopLeft + xSpacing)
+                    p.move_to(holeTopLeft + plateThickness + xSpacing, True)
+                    p.line_to(-xSpacing)
+
+                    p.move_to(holeTopLeft, True)
+                    p.line_to(xSpacing)
+
                 elif j == hCutCount // 2:
                     end += plateThickness / 2
             if j == 0:  # first row
                 end += inset
             elif j == hCutCount - 1:  # last row
                 start -= inset
-            doc.draw_line(group, start, end)
+            p.move_to(start, True)
+            p.line_to(end, True)
 
         #horizontal cuts (should be done last)
         topHCuts.append((aColStart + inset, aColStart + inset + xSpacing))
@@ -75,36 +85,64 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
 
     # draw the outline
     for c in reversed(bottomHCuts):
-        doc.draw_line(group, c[1], c[0])
-    doc.draw_line(group, topLeft + height, topLeft)
+        p.move_to(c[1], True)
+        p.line_to(c[0], True)
+
+    p.move_to(topLeft + height, True)
+    p.line_to(-height)
+
     for c in topHCuts:
-        doc.draw_line(group, c[0], c[1])
-    doc.draw_line(group, topLeft + width, topLeft + width + height)
+        p.move_to(c[0], True)
+        p.line_to(c[1], True)
+
+    p.move_to(topLeft + width, True)
+    p.line_to(height)
+
+
+    group = svg.group(parent)
+    p.path(group)
 
     notchEdges.append(w)
     return notchEdges
 
 def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent, invertNotches):
     startAngle += pi # rotate 180 degrees to put the lid on the topside
-    c2 = ellipse.notchCoordinate(ellipse.rAngle(startAngle), thickness)
-    a1 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
+    #c2 = ellipse.notchCoordinate(ellipse.rAngle(startAngle), thickness)
+    #a1 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
+
+    ell_radius = Coordinate(ellipse.x_radius, ellipse.y_radius)
+    thick_rad = Coordinate(thickness, thickness)
+
+    p = svg.Path()
+
     for n in range(1, len(notches) - 1):
-        startA = ellipse.angleFromDist(startAngle, notches[n])
-        endA = ellipse.angleFromDist(startAngle, notches[n + 1])
-        c1 = center + ellipse.coordinateFromAngle(endA)
-        c2 = ellipse.notchCoordinate(endA, thickness)
+        startA = ellipse.theta_from_dist(startAngle, notches[n])
+        endA = ellipse.theta_from_dist(startAngle, notches[n + 1])
+        c1 = center + ellipse.coordinate_at_theta(endA)
+        notch_offset = ellipse.tangent(endA) * thickness
+        c2 = c1 + notch_offset
+        #c2 = ellipse.notchCoordinate(endA, thickness)
+        #a2 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
 
-        a2 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
-
-        c2 += center
+        #c2 += center
         if (n % 2 == 1) != invertNotches:
-            doc.draw_ellipse(parent, ellipse.w / 2, ellipse.h / 2, center, (startA, endA))
-            doc.draw_line(parent, c1, c2)
-        else:
-            doc.draw_ellipse(parent, ellipse.w / 2 + thickness, ellipse.h / 2 + thickness, center, (a1, a2))
-            doc.draw_line(parent, c2, c1)
+            # rx, ry, center, (start, end)
+            #doc.draw_ellipse(parent, ellipse.w / 2, ellipse.h / 2, center, (startA, endA))
+            # rx, ry, x, y, rotation=0, pos_sweep=True, large_arc=False
+            p.arc_to(ell_radius, c1)
+            #p.move_to(c1)
+            p.line_to(c2)
 
-        a1 = a2
+        else:
+            #doc.draw_ellipse(parent, ellipse.w / 2 + thickness, ellipse.h / 2 + thickness, center, (a1, a2))
+            p.arc_to(ell_radius + thick_rad, c2)
+            #p.move_to(c2)
+            p.line_to(c1)
+
+
+        #a1 = a2
+
+    p.path(parent)
 
 
 
@@ -187,9 +225,15 @@ class EllipticalBox(eff.Effect):
         # do not put elements right at the edge of the page
         xMargin = 3
         yMargin = 3
-        bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), bodyLength, D, cutSpacing, cutNr, thickness, layer, False, self.options.central_rib_body)
-        lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr, thickness, layer, not self.options.invert_lid_notches, self.options.centralRibLid)
-        a1 = lidEndAngle
+
+        bottom_grp = svg.group(layer)
+        top_grp = svg.group(layer)
+
+        bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), bodyLength, D, cutSpacing, cutNr,
+                                         thickness, bottom_grp, False, self.options.central_rib_body)
+        lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr,
+                                        thickness, top_grp, not self.options.invert_lid_notches, self.options.central_rib_lid)
+        #a1 = lidEndAngle
 
         # create elliptical sides
         sidesGrp = svg.group(layer)
@@ -197,18 +241,24 @@ class EllipticalBox(eff.Effect):
         elCenter = Coordinate(xMargin + thickness + W / 2, 2 * D + H / 2 + thickness + 3 * yMargin)
 
         # indicate the division between body and lid
+        p = svg.Path()
         if self.options.invert_lid_notches:
-            doc.draw_line(sidesGrp, elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidStartAngle + pi)), greenStyle)
-            doc.draw_line(sidesGrp, elCenter, elCenter + ell.coordinateFromAngle(ell.rAngle(lidEndAngle + pi)), greenStyle)
-        else:
-            angleA = ell.angleFromDist(lidStartAngle, lidNotches[2])
-            angleB = ell.angleFromDist(lidStartAngle, lidNotches[-2])
+            p.move_to(elCenter + ell.coordinate_at_theta(ell.rAngle(lidStartAngle + pi)))
+            p.line_to(elCenter)
+            p.line_to(elCenter + ell.coordinate_at_theta(ell.rAngle(lidEndAngle + pi)))
 
-            doc.draw_line(sidesGrp, elCenter, elCenter + ell.coordinateFromAngle(angleA + pi), greenStyle)
-            doc.draw_line(sidesGrp, elCenter, elCenter + ell.coordinateFromAngle(angleB + pi), greenStyle)
+        else:
+            angleA = ell.theta_from_dist(lidStartAngle, lidNotches[2])
+            angleB = ell.theta_from_dist(lidStartAngle, lidNotches[-2])
+
+            p.move_to(elCenter + ell.coordinate_at_theta(angleA + pi), True)
+            p.line_to(elCenter, True)
+            p.line_to(elCenter + ell.coordinate_at_theta(angleB + pi), True)
 
         _makeNotchedEllipse(elCenter, ell, lidEndAngle, thickness, bodyNotches, sidesGrp, False)
         _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, not self.options.invert_lid_notches)
+
+        p.path(sidesGrp, greenStyle)
 
         # ribs
         spacer = Coordinate(0, 10)
@@ -219,16 +269,15 @@ class EllipticalBox(eff.Effect):
         outerRibGrp = svg.group(layer)
 
 
-        if self.options.centralRibLid:
-
+        if self.options.central_rib_lid:
             _makeNotchedEllipse(innerRibCenter, ell, lidStartAngle, thickness, lidNotches, innerRibGrp, False)
             _makeNotchedEllipse(outerRibCenter, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
 
-        if self.options.centralRibBody:
+        if self.options.central_rib_body:
             _makeNotchedEllipse(innerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, innerRibGrp, False)
             _makeNotchedEllipse(outerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
 
-        if self.options.centralRibLid or self.options.centralRibBody:
+        if self.options.central_rib_lid or self.options.central_rib_body:
             doc.draw_text(sidesGrp, elCenter, 'side (duplicate this)')
             doc.draw_text(innerRibGrp, innerRibCenter, 'inside rib')
             doc.draw_text(outerRibGrp, outerRibCenter, 'outside rib')
