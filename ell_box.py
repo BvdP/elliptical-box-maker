@@ -130,15 +130,15 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
             # rx, ry, center, (start, end)
             #doc.draw_ellipse(parent, ellipse.w / 2, ellipse.h / 2, center, (startA, endA))
             # rx, ry, x, y, rotation=0, pos_sweep=True, large_arc=False
-            p.arc_to(ell_radius, c1)
+            p.arc_to(ell_radius, c1, absolute=True)
             #p.move_to(c1)
-            p.line_to(c2)
+            p.line_to(c2, True)
 
         else:
             #doc.draw_ellipse(parent, ellipse.w / 2 + thickness, ellipse.h / 2 + thickness, center, (a1, a2))
-            p.arc_to(ell_radius + thick_rad, c2)
+            p.arc_to(ell_radius + thick_rad, c2, absolute=True)
             #p.move_to(c2)
-            p.line_to(c1)
+            p.line_to(c1, True)
 
 
         #a1 = a2
