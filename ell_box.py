@@ -107,11 +107,9 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
 
 def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent, invertNotches):
     startAngle += pi # rotate 180 degrees to put the lid on the topside
-    #c2 = ellipse.notchCoordinate(ellipse.rAngle(startAngle), thickness)
-    #a1 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
 
     ell_radius = Coordinate(ellipse.x_radius, ellipse.y_radius)
-    thick_rad = Coordinate(thickness, thickness)
+    ell_radius_t = ell_radius + Coordinate(thickness, thickness)
 
     p = svg.Path()
     p.move_to(center, True)
@@ -122,26 +120,14 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
         c1 = center + ellipse.coordinate_at_theta(endA)
         notch_offset = ellipse.tangent(endA) * thickness
         c2 = c1 + notch_offset
-        #c2 = ellipse.notchCoordinate(endA, thickness)
-        #a2 = atan2((ellipse.w/2 + thickness) * c2.y, (ellipse.h/2 + thickness) * c2.x)
 
-        #c2 += center
         if (n % 2 == 1) != invertNotches:
-            # rx, ry, center, (start, end)
-            #doc.draw_ellipse(parent, ellipse.w / 2, ellipse.h / 2, center, (startA, endA))
-            # rx, ry, x, y, rotation=0, pos_sweep=True, large_arc=False
             p.arc_to(ell_radius, c1, absolute=True)
-            #p.move_to(c1)
             p.line_to(c2, True)
 
         else:
-            #doc.draw_ellipse(parent, ellipse.w / 2 + thickness, ellipse.h / 2 + thickness, center, (a1, a2))
-            p.arc_to(ell_radius + thick_rad, c2, absolute=True)
-            #p.move_to(c2)
+            p.arc_to(ell_radius_t, c2, absolute=True)
             p.line_to(c1, True)
-
-
-        #a1 = a2
 
     p.path(parent)
 
@@ -261,13 +247,13 @@ class EllipticalBox(eff.Effect):
 
         p.path(sidesGrp, greenStyle)
 
-        # ribs TODO: don't create groups if we don't use them (they still end up in the file)
-        spacer = Coordinate(0, 10)
-        innerRibCenter = Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
-        innerRibGrp = svg.group(layer)
+        # ribs
+        if self.options.central_rib_lid or self.options.central_rib_body:
+            innerRibCenter = Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
+            innerRibGrp = svg.group(layer)
 
-        outerRibCenter = Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
-        outerRibGrp = svg.group(layer)
+            outerRibCenter = Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
+            outerRibGrp = svg.group(layer)
 
 
         if self.options.central_rib_lid:
@@ -275,6 +261,7 @@ class EllipticalBox(eff.Effect):
             _makeNotchedEllipse(outerRibCenter, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
 
         if self.options.central_rib_body:
+            spacer = Coordinate(0, 10)
             _makeNotchedEllipse(innerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, innerRibGrp, False)
             _makeNotchedEllipse(outerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
 
