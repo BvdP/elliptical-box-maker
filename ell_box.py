@@ -111,14 +111,16 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
     ell_radius = Coordinate(ellipse.x_radius, ellipse.y_radius)
     ell_radius_t = ell_radius + Coordinate(thickness, thickness)
 
+    theta = ellipse.theta_from_dist(startAngle, notches[0])
+    ell_point = ellipse.coordinate_at_theta(theta)
+
     p = svg.Path()
-    p.move_to(center, True)
+    p.move_to(center + ell_point, absolute=True)
 
     for n in range(1, len(notches) - 1):
-        startA = ellipse.theta_from_dist(startAngle, notches[n])
-        endA = ellipse.theta_from_dist(startAngle, notches[n + 1])
-        c1 = center + ellipse.coordinate_at_theta(endA)
-        notch_offset = ellipse.tangent(endA) * thickness
+        theta = ellipse.theta_from_dist(startAngle, notches[n + 1])
+        c1 = center + ellipse.coordinate_at_theta(theta)
+        notch_offset = ellipse.tangent(theta) * thickness
         c2 = c1 + notch_offset
 
         if (n % 2 == 1) != invertNotches:
@@ -220,7 +222,6 @@ class EllipticalBox(eff.Effect):
                                          thickness, bottom_grp, False, self.options.central_rib_body)
         lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr,
                                         thickness, top_grp, not self.options.invert_lid_notches, self.options.central_rib_lid)
-        #a1 = lidEndAngle
 
         # create elliptical sides
         sidesGrp = svg.group(layer)
