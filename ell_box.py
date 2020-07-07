@@ -26,7 +26,7 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
     ySpacing = Coordinate(0, cutSpacing)
     cut = height / hCutCount - ySpacing
     plateThickness = Coordinate(0, thickness)
-    notchEdges = [0]
+    notchEdges = []
     topHCuts = []
     bottomHCuts = []
 
@@ -118,13 +118,13 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
     p = svg.Path()
     p.move_to(ell_point, absolute=True)
 
-    for n in range(1, len(notches) - 1):
+    for n in range(len(notches) - 1):
         theta = ellipse.theta_from_dist(startAngle, notches[n + 1])
         ell_point = center + ellipse.coordinate_at_theta(theta)
         notch_offset = ellipse.tangent(theta) * thickness
         notch_point = ell_point + notch_offset
 
-        if (n % 2 == 1) != invertNotches:
+        if (n % 2 == 0) != invertNotches:
             p.arc_to(ell_radius, ell_point, absolute=True)
             prev_offset = notch_offset
 
@@ -238,7 +238,7 @@ class EllipticalBox(eff.Effect):
             p.line_to(elCenter + ell.coordinate_at_theta(ell.rAngle(lidEndAngle + pi)))
 
         else:
-            angleA = ell.theta_from_dist(lidStartAngle, lidNotches[2])
+            angleA = ell.theta_from_dist(lidStartAngle, lidNotches[1])
             angleB = ell.theta_from_dist(lidStartAngle, lidNotches[-2])
 
             p.move_to(elCenter + ell.coordinate_at_theta(angleA + pi), True)
