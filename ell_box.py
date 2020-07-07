@@ -169,19 +169,19 @@ class EllipticalBox(eff.Effect):
         # input sanity check
         error = False
         if min(self.options.height, self.options.width, self.options.depth) == 0:
-            inkex.errormsg('Error: Dimensions must be non zero')
+            eff.errormsg('Error: Dimensions must be non zero')
             error = True
 
         if self.options.cut_nr < 1:
-            inkex.errormsg('Error: Number of cuts should be at least 1')
+            eff.errormsg('Error: Number of cuts should be at least 1')
             error = True
 
         if (self.options.central_rib_lid or self.options.central_rib_body) and self.options.cut_nr % 2 == 1:
-            inkex.errormsg('Error: Central rib is only valid with an even number of cuts')
+            eff.errormsg('Error: Central rib is only valid with an even number of cuts')
             error = True
 
         if self.options.unit not in self.knownUnits:
-            inkex.errormsg('Error: unknown unit. '+ self.options.unit)
+            eff.errormsg('Error: unknown unit. '+ self.options.unit)
             error = True
 
         if error:
