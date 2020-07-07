@@ -112,24 +112,24 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
     ell_radius_t = ell_radius + Coordinate(thickness, thickness)
 
     theta = ellipse.theta_from_dist(startAngle, notches[0])
-    ell_point = ellipse.coordinate_at_theta(theta)
+    ell_point = center + ellipse.coordinate_at_theta(theta)
 
     p = svg.Path()
-    p.move_to(center + ell_point, absolute=True)
+    p.move_to(ell_point, absolute=True)
 
     for n in range(1, len(notches) - 1):
         theta = ellipse.theta_from_dist(startAngle, notches[n + 1])
-        c1 = center + ellipse.coordinate_at_theta(theta)
+        ell_point = center + ellipse.coordinate_at_theta(theta)
         notch_offset = ellipse.tangent(theta) * thickness
-        c2 = c1 + notch_offset
+        c2 = ell_point + notch_offset
 
         if (n % 2 == 1) != invertNotches:
-            p.arc_to(ell_radius, c1, absolute=True)
+            p.arc_to(ell_radius, ell_point, absolute=True)
             p.line_to(c2, True)
 
         else:
             p.arc_to(ell_radius_t, c2, absolute=True)
-            p.line_to(c1, True)
+            p.line_to(ell_point, True)
 
     p.path(parent)
 
