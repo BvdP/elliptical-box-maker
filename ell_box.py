@@ -105,13 +105,13 @@ def _makeCurvedSurface(topLeft, w, h, cutSpacing, hCutCount, thickness, parent, 
     notchEdges.append(w)
     return notchEdges
 
-def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent, invertNotches):
-    startAngle += pi # rotate 180 degrees to put the lid on the topside
+def _makeNotchedEllipse(center, ellipse, start_theta, thickness, notches, parent, invertNotches):
+    start_theta += pi # rotate 180 degrees to put the lid on the topside
 
     ell_radius = Coordinate(ellipse.x_radius, ellipse.y_radius)
     ell_radius_t = ell_radius + Coordinate(thickness, thickness)
 
-    theta = ellipse.theta_from_dist(startAngle, notches[0])
+    theta = ellipse.theta_from_dist(start_theta, notches[0])
     ell_point = center + ellipse.coordinate_at_theta(theta)
     prev_offset = ellipse.tangent(theta) * thickness
 
@@ -119,7 +119,7 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
     p.move_to(ell_point, absolute=True)
 
     for n in range(len(notches) - 1):
-        theta = ellipse.theta_from_dist(startAngle, notches[n + 1])
+        theta = ellipse.theta_from_dist(start_theta, notches[n + 1])
         ell_point = center + ellipse.coordinate_at_theta(theta)
         notch_offset = ellipse.tangent(theta) * thickness
         notch_point = ell_point + notch_offset
@@ -207,11 +207,11 @@ class EllipticalBox(eff.Effect):
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
-        lidStartAngle = pi / 2 - lidAngleRad / 2
-        lidEndAngle = pi / 2 + lidAngleRad / 2
+        lid_start_theta = ell.theta_at_angle(pi / 2 - lidAngleRad / 2)
+        lid_end_theta = ell.theta_at_angle(pi / 2 + lidAngleRad / 2)
 
-        lidLength = ell.dist_from_theta(lidStartAngle, lidEndAngle)
-        bodyLength = ell.dist_from_theta(lidEndAngle, lidStartAngle)
+        lidLength = ell.dist_from_theta(lid_start_theta, lid_end_theta)
+        bodyLength = ell.dist_from_theta(lid_end_theta, lid_start_theta)
 
         # do not put elements right at the edge of the page
         xMargin = 3
@@ -233,20 +233,21 @@ class EllipticalBox(eff.Effect):
         # indicate the division between body and lid
         p = svg.Path()
         if self.options.invert_lid_notches:
-            p.move_to(elCenter + ell.coordinate_at_theta(ell.rAngle(lidStartAngle + pi)))
-            p.line_to(elCenter)
-            p.line_to(elCenter + ell.coordinate_at_theta(ell.rAngle(lidEndAngle + pi)))
+            #p.move_to(elCenter + ell.coordinate_at_theta(ell.theta_at_angle(lid_start_theta + pi)), True)
+            p.move_to(elCenter + ell.coordinate_at_theta(lid_start_theta + pi), True)
+            p.line_to(elCenter, True)
+            p.line_to(elCenter + ell.coordinate_at_theta(lid_end_theta + pi), True)
 
         else:
-            angleA = ell.theta_from_dist(lidStartAngle, lidNotches[1])
-            angleB = ell.theta_from_dist(lidStartAngle, lidNotches[-2])
+            angleA = ell.theta_from_dist(lid_start_theta, lidNotches[1])
+            angleB = ell.theta_from_dist(lid_start_theta, lidNotches[-2])
 
             p.move_to(elCenter + ell.coordinate_at_theta(angleA + pi), True)
             p.line_to(elCenter, True)
             p.line_to(elCenter + ell.coordinate_at_theta(angleB + pi), True)
 
-        _makeNotchedEllipse(elCenter, ell, lidEndAngle, thickness, bodyNotches, sidesGrp, False)
-        _makeNotchedEllipse(elCenter, ell, lidStartAngle, thickness, lidNotches, sidesGrp, not self.options.invert_lid_notches)
+        _makeNotchedEllipse(elCenter, ell, lid_end_theta, thickness, bodyNotches, sidesGrp, False)
+        _makeNotchedEllipse(elCenter, ell, lid_start_theta, thickness, lidNotches, sidesGrp, not self.options.invert_lid_notches)
 
         p.path(sidesGrp, greenStyle)
 
@@ -260,13 +261,13 @@ class EllipticalBox(eff.Effect):
 
 
         if self.options.central_rib_lid:
-            _makeNotchedEllipse(innerRibCenter, ell, lidStartAngle, thickness, lidNotches, innerRibGrp, False)
-            _makeNotchedEllipse(outerRibCenter, ell, lidStartAngle, thickness, lidNotches, outerRibGrp, True)
+            _makeNotchedEllipse(innerRibCenter, ell, lid_start_theta, thickness, lidNotches, innerRibGrp, False)
+            _makeNotchedEllipse(outerRibCenter, ell, lid_start_theta, thickness, lidNotches, outerRibGrp, True)
 
         if self.options.central_rib_body:
             spacer = Coordinate(0, 10)
-            _makeNotchedEllipse(innerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, innerRibGrp, False)
-            _makeNotchedEllipse(outerRibCenter + spacer, ell, lidEndAngle, thickness, bodyNotches, outerRibGrp, True)
+            _makeNotchedEllipse(innerRibCenter + spacer, ell, lid_end_theta, thickness, bodyNotches, innerRibGrp, False)
+            _makeNotchedEllipse(outerRibCenter + spacer, ell, lid_end_theta, thickness, bodyNotches, outerRibGrp, True)
 
         if self.options.central_rib_lid or self.options.central_rib_body:
             doc.draw_text(sidesGrp, elCenter, 'side (duplicate this)')
