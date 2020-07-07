@@ -121,14 +121,14 @@ def _makeNotchedEllipse(center, ellipse, startAngle, thickness, notches, parent,
         theta = ellipse.theta_from_dist(startAngle, notches[n + 1])
         ell_point = center + ellipse.coordinate_at_theta(theta)
         notch_offset = ellipse.tangent(theta) * thickness
-        c2 = ell_point + notch_offset
+        notch_point = ell_point + notch_offset
 
         if (n % 2 == 1) != invertNotches:
             p.arc_to(ell_radius, ell_point, absolute=True)
-            p.line_to(c2, True)
+            p.line_to(notch_point, True)
 
         else:
-            p.arc_to(ell_radius_t, c2, absolute=True)
+            p.arc_to(ell_radius_t, notch_point, absolute=True)
             p.line_to(ell_point, True)
 
     p.path(parent)
