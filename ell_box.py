@@ -270,9 +270,9 @@ class EllipticalBox(eff.Effect):
             _makeNotchedEllipse(outerRibCenter + spacer, ell, lid_end_theta, thickness, bodyNotches, outerRibGrp, True)
 
         if self.options.central_rib_lid or self.options.central_rib_body:
-            doc.draw_text(sidesGrp, elCenter, 'side (duplicate this)')
-            doc.draw_text(innerRibGrp, innerRibCenter, 'inside rib')
-            doc.draw_text(outerRibGrp, outerRibCenter, 'outside rib')
+            svg.text(sidesGrp, elCenter, 'side (duplicate this)')
+            svg.text(innerRibGrp, innerRibCenter, 'inside rib')
+            svg.text(outerRibGrp, outerRibCenter, 'outside rib')
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
