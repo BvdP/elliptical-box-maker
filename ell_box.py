@@ -223,7 +223,8 @@ class EllipticalBox(eff.Effect):
         bodyNotches = _makeCurvedSurface(Coordinate(xMargin, yMargin), bodyLength, D, cutSpacing, cutNr,
                                          thickness, bottom_grp, False, self.options.central_rib_body)
         lidNotches = _makeCurvedSurface(Coordinate(xMargin, D + 2 * yMargin), lidLength, D, cutSpacing, cutNr,
-                                        thickness, top_grp, not self.options.invert_lid_notches, self.options.central_rib_lid)
+                                        thickness, top_grp, not self.options.invert_lid_notches,
+                                        self.options.central_rib_lid)
 
         # create elliptical sides
         sidesGrp = svg.group(layer)
@@ -233,7 +234,6 @@ class EllipticalBox(eff.Effect):
         # indicate the division between body and lid
         p = svg.Path()
         if self.options.invert_lid_notches:
-            #p.move_to(elCenter + ell.coordinate_at_theta(ell.theta_at_angle(lid_start_theta + pi)), True)
             p.move_to(elCenter + ell.coordinate_at_theta(lid_start_theta + pi), True)
             p.line_to(elCenter, True)
             p.line_to(elCenter + ell.coordinate_at_theta(lid_end_theta + pi), True)
@@ -247,7 +247,8 @@ class EllipticalBox(eff.Effect):
             p.line_to(elCenter + ell.coordinate_at_theta(angleB + pi), True)
 
         _makeNotchedEllipse(elCenter, ell, lid_end_theta, thickness, bodyNotches, sidesGrp, False)
-        _makeNotchedEllipse(elCenter, ell, lid_start_theta, thickness, lidNotches, sidesGrp, not self.options.invert_lid_notches)
+        _makeNotchedEllipse(elCenter, ell, lid_start_theta, thickness, lidNotches, sidesGrp,
+                            not self.options.invert_lid_notches)
 
         p.path(sidesGrp, greenStyle)
 
@@ -256,7 +257,8 @@ class EllipticalBox(eff.Effect):
             innerRibCenter = Coordinate(xMargin + thickness + W / 2, 2 * D +  1.5 * (H + 2 *thickness) + 4 * yMargin)
             innerRibGrp = svg.group(layer)
 
-            outerRibCenter = Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness) , 2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
+            outerRibCenter = Coordinate(2 * xMargin + 1.5 * (W + 2 * thickness),
+                                        2 * D + 1.5 * (H + 2 * thickness) + 4 * yMargin)
             outerRibGrp = svg.group(layer)
 
 
