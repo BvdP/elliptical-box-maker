@@ -1,5 +1,7 @@
 # elliptical-box-maker
 
+# this is a fork to make https://github.com/BvdP/elliptical-box-maker work under InkScape 1.0. Because a lot of stuff has to be changed it makes sense to have a repo just for InkScape 1.0 version instead of messing around with different compability stages between older and newer Python and InkScape versions.
+
 Inkscape plug-in that generates drawings for an elliptical box which can be made using a laser cutter.
 ##Overview
 

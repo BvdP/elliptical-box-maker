@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from inkscape_helper.Coordinate import Coordinate
 import inkscape_helper.Effect as eff
@@ -9,6 +9,7 @@ from inkscape_helper.Line import Line
 from inkscape_helper.EllipticArc import EllipticArc
 
 from math import *
+import inkex
 
 #Note: keep in mind that SVG coordinates start in the top-left corner i.e. with an inverted y-axis
 
@@ -143,20 +144,20 @@ class EllipticalBox(eff.Effect):
     """
     def __init__(self):
         options = [
-            ['unit', 'string', 'mm', 'Unit, one of: cm, mm, in, ft, ...'],
-            ['thickness', 'float', '3.0', 'Material thickness'],
-            ['width', 'float', '100', 'Box width'],
-            ['height', 'float', '100', 'Box height'],
-            ['depth', 'float', '100', 'Box depth'],
-            ['cut_dist', 'float', '1.5', 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.'],
-            ['auto_cut_dist', 'inkbool', 'false', 'Automatically set the cut distance based on the curvature.'], # in progress
-            ['cut_nr', 'int', '3', 'Number of cuts across the depth of the box.'],
-            ['lid_angle', 'float', '120', 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)'],
-            ['body_ribcount', 'int', '0', 'Number of ribs in the body'],
-            ['lid_ribcount', 'int', '0', 'Number of ribs in the lid'],
-            ['invert_lid_notches', 'inkbool', 'false', 'Invert the notch pattern on the lid (keeps the lid from sliding sideways)'],
-            ['central_rib_lid', 'inkbool', 'false', 'Create a central rib in the lid'],
-            ['central_rib_body', 'inkbool', 'false', 'Create a central rib in the body']
+            ['unit', str, 'mm', 'Unit, one of: cm, mm, in, ft, ...'],
+            ['thickness', float, '3.0', 'Material thickness'],
+            ['width', float, '100', 'Box width'],
+            ['height', float, '100', 'Box height'],
+            ['depth', float, '100', 'Box depth'],
+            ['cut_dist', float, '1.5', 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.'],
+            ['auto_cut_dist', inkex.Boolean, 'false', 'Automatically set the cut distance based on the curvature.'], # in progress
+            ['cut_nr', int, '3', 'Number of cuts across the depth of the box.'],
+            ['lid_angle', float, '120', 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)'],
+            ['body_ribcount', int, '0', 'Number of ribs in the body'],
+            ['lid_ribcount', int, '0', 'Number of ribs in the lid'],
+            ['invert_lid_notches', inkex.Boolean, 'false', 'Invert the notch pattern on the lid (keeps the lid from sliding sideways)'],
+            ['central_rib_lid', inkex.Boolean, 'false', 'Create a central rib in the lid'],
+            ['central_rib_body', inkex.Boolean, 'false', 'Create a central rib in the body']
         ]
         eff.Effect.__init__(self, options)
 
@@ -190,20 +191,17 @@ class EllipticalBox(eff.Effect):
 
         # convert units
         unit = self.options.unit
-        H = self.unittouu(str(self.options.height) + unit)
-        W = self.unittouu(str(self.options.width) + unit)
-        D = self.unittouu(str(self.options.depth) + unit)
-        thickness = self.unittouu(str(self.options.thickness) + unit)
-        cutSpacing = self.unittouu(str(self.options.cut_dist) + unit)
+        H = self.svg.unittouu(str(self.options.height) + unit)
+        W = self.svg.unittouu(str(self.options.width) + unit)
+        D = self.svg.unittouu(str(self.options.depth) + unit)
+        thickness = self.svg.unittouu(str(self.options.thickness) + unit)
+        cutSpacing = self.svg.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
 
         doc_root = self.document.getroot()
-        docWidth = self.unittouu(doc_root.get('width'))
-        docHeigh = self.unittouu(doc_root.attrib['height'])
-
         layer = svg.layer(doc_root, 'Elliptical Box')
 
-        ell = Ellipse(W, H)
+        ell = Ellipse(W/2, H/2)
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
@@ -277,5 +275,4 @@ class EllipticalBox(eff.Effect):
             svg.text(outerRibGrp, outerRibCenter, 'outside rib')
 
 # Create effect instance and apply it.
-effect = EllipticalBox()
-effect.affect()
+EllipticalBox().run()
