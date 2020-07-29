@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from inkscape_helper.Coordinate import Coordinate
 import inkscape_helper.Effect as eff
@@ -199,12 +199,9 @@ class EllipticalBox(eff.Effect):
         cutNr = self.options.cut_nr
 
         doc_root = self.document.getroot()
-        docWidth = self.svg.unittouu(doc_root.get('width'))
-        docHeigh = self.svg.unittouu(doc_root.attrib['height'])
-
         layer = svg.layer(doc_root, 'Elliptical Box')
 
-        ell = Ellipse(W, H)
+        ell = Ellipse(W/2, H/2)
 
         #body and lid
         lidAngleRad = self.options.lid_angle * 2 * pi / 360
