@@ -275,5 +275,4 @@ class EllipticalBox(eff.Effect):
             svg.text(outerRibGrp, outerRibCenter, 'outside rib')
 
 # Create effect instance and apply it.
-effect = EllipticalBox()
-effect.run()
+EllipticalBox().run()
