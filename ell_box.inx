@@ -33,6 +33,6 @@
 		</effects-menu>
 	</effect>
 	<script>
-		<command reldir="extensions" interpreter="python">ell_box.py</command>
+		<command location="inx" interpreter="python">ell_box.py</command>
 	</script>
 </inkscape-extension>
