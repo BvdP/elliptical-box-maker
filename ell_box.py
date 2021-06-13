@@ -143,20 +143,20 @@ class EllipticalBox(eff.Effect):
     """
     def __init__(self):
         options = [
-            ['unit', 'string', 'mm', 'Unit, one of: cm, mm, in, ft, ...'],
-            ['thickness', 'float', '3.0', 'Material thickness'],
-            ['width', 'float', '100', 'Box width'],
-            ['height', 'float', '100', 'Box height'],
-            ['depth', 'float', '100', 'Box depth'],
-            ['cut_dist', 'float', '1.5', 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.'],
-            ['auto_cut_dist', 'inkbool', 'false', 'Automatically set the cut distance based on the curvature.'], # in progress
-            ['cut_nr', 'int', '3', 'Number of cuts across the depth of the box.'],
-            ['lid_angle', 'float', '120', 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)'],
-            ['body_ribcount', 'int', '0', 'Number of ribs in the body'],
-            ['lid_ribcount', 'int', '0', 'Number of ribs in the lid'],
-            ['invert_lid_notches', 'inkbool', 'false', 'Invert the notch pattern on the lid (keeps the lid from sliding sideways)'],
-            ['central_rib_lid', 'inkbool', 'false', 'Create a central rib in the lid'],
-            ['central_rib_body', 'inkbool', 'false', 'Create a central rib in the body']
+            ['unit', str, 'mm', 'Unit, one of: cm, mm, in, ft, ...'],
+            ['thickness', float, '3.0', 'Material thickness'],
+            ['width', float, '100', 'Box width'],
+            ['height', float, '100', 'Box height'],
+            ['depth', float, '100', 'Box depth'],
+            ['cut_dist', float, '1.5', 'Distance between cuts on the wrap around. Note that this value will change slightly to evenly fill up the available space.'],
+            ['auto_cut_dist', eff.inkex.Boolean, 'false', 'Automatically set the cut distance based on the curvature.'], # in progress
+            ['cut_nr', int, '3', 'Number of cuts across the depth of the box.'],
+            ['lid_angle', float, '120', 'Angle that forms the lid (in degrees, measured from centerpoint of the ellipse)'],
+            ['body_ribcount', int, '0', 'Number of ribs in the body'],
+            ['lid_ribcount', int, '0', 'Number of ribs in the lid'],
+            ['invert_lid_notches', eff.inkex.Boolean, 'false', 'Invert the notch pattern on the lid (keeps the lid from sliding sideways)'],
+            ['central_rib_lid', eff.inkex.Boolean, 'false', 'Create a central rib in the lid'],
+            ['central_rib_body', eff.inkex.Boolean, 'false', 'Create a central rib in the body']
         ]
         eff.Effect.__init__(self, options)
 
