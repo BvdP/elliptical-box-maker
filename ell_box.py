@@ -278,4 +278,4 @@ class EllipticalBox(eff.Effect):
 
 # Create effect instance and apply it.
 effect = EllipticalBox()
-effect.affect()
+effect.run()
