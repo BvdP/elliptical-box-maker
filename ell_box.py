@@ -190,16 +190,16 @@ class EllipticalBox(eff.Effect):
 
         # convert units
         unit = self.options.unit
-        H = self.unittouu(str(self.options.height) + unit)
-        W = self.unittouu(str(self.options.width) + unit)
-        D = self.unittouu(str(self.options.depth) + unit)
-        thickness = self.unittouu(str(self.options.thickness) + unit)
-        cutSpacing = self.unittouu(str(self.options.cut_dist) + unit)
+        H = self.svg.unittouu(str(self.options.height) + unit)
+        W = self.svg.unittouu(str(self.options.width) + unit)
+        D = self.svg.unittouu(str(self.options.depth) + unit)
+        thickness = self.svg.unittouu(str(self.options.thickness) + unit)
+        cutSpacing = self.svg.unittouu(str(self.options.cut_dist) + unit)
         cutNr = self.options.cut_nr
 
         doc_root = self.document.getroot()
-        docWidth = self.unittouu(doc_root.get('width'))
-        docHeigh = self.unittouu(doc_root.attrib['height'])
+        docWidth = self.svg.unittouu(doc_root.get('width'))
+        docHeigh = self.svg.unittouu(doc_root.attrib['height'])
 
         layer = svg.layer(doc_root, 'Elliptical Box')
 
